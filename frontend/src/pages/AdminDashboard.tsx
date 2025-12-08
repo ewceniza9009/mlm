@@ -5,7 +5,7 @@ import { useRunCommissionsMutation, useGetSystemLogsQuery } from '../store/api';
 
 const AdminDashboard = () => {
   const [runCommissions, { isLoading: processing }] = useRunCommissionsMutation();
-  // Fetch logs with error state tracking
+  
   const { data: logs, isLoading: loadingLogs, error: logsError } = useGetSystemLogsQuery(undefined, { pollingInterval: 5000 });
   const [lastRun, setLastRun] = useState<string | null>(null);
 

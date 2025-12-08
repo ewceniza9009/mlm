@@ -10,11 +10,9 @@ import { useGetUplineQuery, useGetWalletQuery } from '../store/api';
 const DashboardHome = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   
-  // Fetch Sponsor Data
   const { data: uplineData, isLoading: uplineLoading } = useGetUplineQuery(user?.id, { skip: !user?.id });
   const sponsor = uplineData?.sponsor;
 
-  // Fetch Wallet Data for Stats
   const { data: wallet } = useGetWalletQuery(undefined);
 
   const [isOverviewExpanded, setIsOverviewExpanded] = useState(true);

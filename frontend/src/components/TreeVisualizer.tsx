@@ -9,12 +9,11 @@ const TreeVisualizer = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const { data: treeData, isLoading, error } = useGetTreeQuery(user?.id);
   
-  // Center initially
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
 
   const containerStyles = {
     width: '100%',
-    height: '100%', // Takes full height of parent
+    height: '100%', 
     background: '#0f172a' // slate-900
   };
 

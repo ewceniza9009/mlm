@@ -17,10 +17,10 @@ const EnrollMember = () => {
     position: 'left'
   });
   
-  // Wait for user to be loaded
+  
   useEffect(() => {
     if (!currentUser) {
-       // redirect or wait
+       
     }
   }, [currentUser]);
 
@@ -44,8 +44,8 @@ const EnrollMember = () => {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        sponsorUsername: currentUser.username, // Explicitly use current user
-        spilloverPreference: formData.position as 'left' | 'right' | 'weaker_leg', // Map to API exp
+        sponsorUsername: currentUser.username, 
+        spilloverPreference: formData.position as 'left' | 'right' | 'weaker_leg', 
         packageName: 'Starter' 
       }).unwrap();
       

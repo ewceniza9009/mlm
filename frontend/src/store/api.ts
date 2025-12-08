@@ -59,8 +59,7 @@ export const api = createApi({
     getSystemLogs: builder.query({
         query: () => 'admin/logs',
         providesTags: ['SystemLogs']
-    }),
-    // NEW: Fetch Commission History
+    }),    
     getAdminCommissions: builder.query({
         query: () => 'admin/commissions',
         providesTags: ['Commissions']

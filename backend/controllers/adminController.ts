@@ -30,7 +30,6 @@ export const getSystemLogs = async (req: Request, res: Response) => {
   }
 };
 
-// --- NEW FUNCTION: Fetch Commission History ---
 export const getCommissionsHistory = async (req: Request, res: Response) => {
   try {
     // Aggregate all history entries from all Commission documents

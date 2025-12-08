@@ -13,7 +13,7 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ['User', 'Tree'],
+  tagTypes: ['User', 'Tree', 'Wallet', 'SystemLogs'], // Added SystemLogs tag
   endpoints: (builder) => ({
     getTree: builder.query({
       query: (rootId) => `network/tree${rootId ? `?rootId=${rootId}` : ''}`,
@@ -36,7 +36,48 @@ export const api = createApi({
         body: data,
       }),
     }),
+    getWallet: builder.query({
+      query: () => 'wallet',
+      providesTags: ['Wallet'],
+    }),
+    requestWithdrawal: builder.mutation({
+      query: (data) => ({
+        url: 'wallet/withdraw',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Wallet'],
+    }),
+    updateProfile: builder.mutation({
+        query: (data) => ({
+            url: 'auth/profile',
+            method: 'PUT',
+            body: data
+        }),
+        invalidatesTags: ['User']
+    }),
+    getSystemLogs: builder.query({ // New Endpoint
+        query: () => 'admin/logs',
+        providesTags: ['SystemLogs']
+    }),
+    runCommissions: builder.mutation({
+      query: () => ({
+        url: 'admin/run-commissions',
+        method: 'POST',
+      }),
+      invalidatesTags: ['Wallet', 'User', 'SystemLogs'], // Invalidate logs to auto-refresh UI
+    }),
   }),
 });
 
-export const { useGetTreeQuery, useLoginMutation, useRegisterMutation, useGetUplineQuery } = api;
+export const { 
+  useGetTreeQuery, 
+  useLoginMutation, 
+  useRegisterMutation, 
+  useGetUplineQuery,
+  useGetWalletQuery,
+  useRequestWithdrawalMutation,
+  useUpdateProfileMutation,
+  useRunCommissionsMutation,
+  useGetSystemLogsQuery // Export new hook
+} = api;

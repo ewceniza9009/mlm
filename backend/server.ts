@@ -6,9 +6,12 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+
+// Import Routes
 import authRoutes from './routes/authRoutes';
 import genealogyRoutes from './routes/genealogyRoutes';
 import adminRoutes from './routes/adminRoutes';
+import walletRoutes from './routes/walletRoutes'; // Ensure this exists from previous steps
 
 const app = express();
 
@@ -24,16 +27,18 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 
-// Routes
+// Base Route
 app.get('/', (req, res) => {
   res.send('MLM Backend API Running (TS)');
 });
 
-app.use('/api/v1/auth', authRoutes);
+// Mount API Routes
+app.use('/api/v1/auth', authRoutes);       // <--- CRITICAL FOR LOGIN
 app.use('/api/v1/network', genealogyRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/wallet', walletRoutes);
 
-// Server
+// Server Start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

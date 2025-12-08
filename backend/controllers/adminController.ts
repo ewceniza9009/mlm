@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import User from '../models/User';
 import Commission from '../models/Commission';
+import SystemLog from '../models/SystemLog'; 
 import { CommissionEngine } from '../services/CommissionEngine';
 
 export const getSystemStats = async (req: Request, res: Response) => {
@@ -20,18 +21,47 @@ export const getSystemStats = async (req: Request, res: Response) => {
   }
 };
 
+// Fetch logs for the frontend
+export const getSystemLogs = async (req: Request, res: Response) => {
+  try {
+    const logs = await SystemLog.find()
+      .sort({ timestamp: -1 })
+      .limit(50);
+    res.json(logs);
+  } catch (error) {
+    console.error('Log error:', error);
+    res.status(500).json({ message: 'Error fetching logs' });
+  }
+};
+
+// Run the payout cycle
 export const runCommissionRun = async (req: Request, res: Response) => {
   try {
     const users = await User.find({ isActive: true });
-    let totalPaid = 0;
     
+    await SystemLog.create({
+        action: 'COMMISSION_RUN_START',
+        details: `Started payout cycle for ${users.length} active users.`,
+        type: 'INFO'
+    });
+
     for (const user of users) {
-      // Run binary pairing for each user
       await CommissionEngine.runBinaryPairing(user._id as unknown as string);
     }
     
+    await SystemLog.create({
+        action: 'COMMISSION_RUN_COMPLETE',
+        details: `Successfully processed binary pairing for ${users.length} users.`,
+        type: 'SUCCESS'
+    });
+
     res.json({ message: 'Commission Run Completed', usersProcessed: users.length });
   } catch (error) {
+    await SystemLog.create({
+        action: 'COMMISSION_RUN_FAILED',
+        details: (error as Error).message,
+        type: 'ERROR'
+    });
     res.status(500).json({ message: 'Commission Run Failed' });
   }
 };

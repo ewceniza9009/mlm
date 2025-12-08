@@ -1,52 +1,41 @@
 import { Request, Response } from 'express';
-import User, { IUser } from '../models/User';
+import User from '../models/User';
 import Commission from '../models/Commission';
 import Wallet from '../models/Wallet';
-import Package, { IPackage } from '../models/Package';
+import Package from '../models/Package';
 import spilloverService from '../services/spilloverService';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-// Register
+// Register Logic
 export const register = async (req: Request, res: Response) => {
   try {
     const { username, email, password, sponsorUsername, packageName } = req.body;
 
-    // 1. Check if user exists
+    // Check existing
     const existing = await User.findOne({ $or: [{ email }, { username }] });
     if (existing) return res.status(400).json({ message: 'User already exists' });
 
-    // 2. Resolve Sponsor
-    let sponsor: IUser | null = null;
+    // Resolve Sponsor
+    let sponsor = null;
     if (sponsorUsername) {
-      // Case insensitive search
       sponsor = await User.findOne({ username: { $regex: new RegExp(`^${sponsorUsername}$`, 'i') } });
-      
-      // If still not found and not root, error
       if (!sponsor && sponsorUsername.toLowerCase() !== 'root') { 
          return res.status(404).json({ message: 'Sponsor not found' });
-      } else if (!sponsor && sponsorUsername.toLowerCase() === 'root') {
-         // Special case if 'root' is not in DB but we want to allow it? 
-         // Actually root IS in DB. So if not found, it's missing.
-         // But maybe we just want to proceed if we can't find it but it is root? No.
-         // Let's stick to just Regex for now.
-         return res.status(404).json({ message: `Sponsor '${sponsorUsername}' not found` });
       }
     } else {
-      // Root user case
+      // Allow first user without sponsor
       const count = await User.countDocuments();
-      if (count > 0 && !sponsorUsername) {
-        return res.status(400).json({ message: 'Sponsor required' });
-      }
+      if (count > 0) return res.status(400).json({ message: 'Sponsor required' });
     }
 
-    // 3. Resolve Package
+    // Resolve Package
     const pkg = await Package.findOne({ name: packageName });
     
-    // 4. Hash Password
+    // Hash Password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 5. Create User Object
+    // Create User
     const newUser = new User({
       username,
       email,
@@ -54,25 +43,22 @@ export const register = async (req: Request, res: Response) => {
       enrollmentPackage: pkg ? pkg._id : null
     });
 
-    // 6. Placement Logic
-    let savedUser: IUser;
+    // Placement
+    let savedUser;
     if (sponsor) {
-      savedUser = await spilloverService.placeUser(newUser, sponsor.id); // sponsor.id is string getter for _id
+      savedUser = await spilloverService.placeUser(newUser, sponsor.id);
       
-      // Trigger Referral Bonus (Instant)
+      // Trigger Bonuses (Lazy Load to avoid circular dependency issues)
       const { CommissionEngine } = require('../services/CommissionEngine');
       await CommissionEngine.distributeReferralBonus(sponsor.id, savedUser._id.toString());
-      
-      // Trigger PV Propagation (if package has PV)
       if (pkg && pkg.pv) {
          await CommissionEngine.updateUplinePV(savedUser._id.toString(), pkg.pv);
       }
     } else {
-      // Root user
       savedUser = await newUser.save();
     }
 
-    // 7. Initialize Wallet & Commission
+    // Init Wallet & Commission
     await new Wallet({ userId: savedUser._id }).save();
     await new Commission({ userId: savedUser._id }).save();
 
@@ -84,7 +70,7 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-// Login
+// Login Logic
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -93,7 +79,6 @@ export const login = async (req: Request, res: Response) => {
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
     const isMatch = await bcrypt.compare(password, user.password as string);
-    console.log(`Login attempt for ${email}: Match=${isMatch}`);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign(
@@ -102,9 +87,18 @@ export const login = async (req: Request, res: Response) => {
       { expiresIn: '1d' }
     );
 
-    res.json({ token, user: { id: user._id, username: user.username, email: user.email, role: user.role } });
+    res.json({ 
+        token, 
+        user: { 
+            id: user._id, 
+            username: user.username, 
+            email: user.email, 
+            role: user.role 
+        } 
+    });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
 };

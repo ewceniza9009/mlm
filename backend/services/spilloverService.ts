@@ -21,13 +21,34 @@ const findPlacement = async (sponsorId: string | Types.ObjectId, preference: str
     if (!sponsor.leftChildId) return { parentId: sponsor._id as Types.ObjectId, position: 'left' };
     return traverseExtreme(sponsor.leftChildId, 'left');
   }
-  
+
   if (preference === 'extreme_right' || preference === 'right') {
     if (!sponsor.rightChildId) return { parentId: sponsor._id as Types.ObjectId, position: 'right' };
     return traverseExtreme(sponsor.rightChildId, 'right');
   }
 
-  // Weaker Leg Logic
+  // Multi-Center (Placeholder - demo usually sticks to basic, but we can default to balanced or specific logic)
+  if (preference === 'balanced') {
+    if (!sponsor.leftChildId) return { parentId: sponsor._id as Types.ObjectId, position: 'left' };
+    if (!sponsor.rightChildId) return { parentId: sponsor._id as Types.ObjectId, position: 'right' };
+
+    // Get subtree counts synchronously (or approximation via PV)
+    // For true 1:1 balance, we need descendant count.
+
+    // Check Left Subtree Count
+    const leftCount = await User.countDocuments({ path: { $regex: `,${sponsor.leftChildId.toString()},` } });
+
+    // Check Right Subtree Count
+    const rightCount = await User.countDocuments({ path: { $regex: `,${sponsor.rightChildId.toString()},` } });
+
+    if (leftCount <= rightCount) {
+      return traverseToFirstEmpty(sponsor.leftChildId);
+    } else {
+      return traverseToFirstEmpty(sponsor.rightChildId);
+    }
+  }
+
+  // Weaker Leg Logic (Default)
   if (!sponsor.leftChildId) return { parentId: sponsor._id as Types.ObjectId, position: 'left' };
   if (!sponsor.rightChildId) return { parentId: sponsor._id as Types.ObjectId, position: 'right' };
 
@@ -36,9 +57,9 @@ const findPlacement = async (sponsorId: string | Types.ObjectId, preference: str
   const rightPV = commission ? commission.rightLegPV + commission.carriedRightPV : 0;
 
   if (leftPV <= rightPV) {
-     return traverseToFirstEmpty(sponsor.leftChildId);
+    return traverseToFirstEmpty(sponsor.leftChildId);
   } else {
-     return traverseToFirstEmpty(sponsor.rightChildId);
+    return traverseToFirstEmpty(sponsor.rightChildId);
   }
 };
 
@@ -60,15 +81,15 @@ const traverseExtreme = async (nodeId: Types.ObjectId, side: 'left' | 'right'): 
 
 const traverseToFirstEmpty = async (startNodeId: Types.ObjectId): Promise<PlacementResult> => {
   const queue: Types.ObjectId[] = [startNodeId];
-  
+
   while (queue.length > 0) {
     const currentId = queue.shift();
     const node = await User.findById(currentId);
     if (!node) continue;
-    
+
     if (!node.leftChildId) return { parentId: node._id as Types.ObjectId, position: 'left' };
     if (!node.rightChildId) return { parentId: node._id as Types.ObjectId, position: 'right' };
-    
+
     queue.push(node.leftChildId);
     queue.push(node.rightChildId);
   }
@@ -78,17 +99,17 @@ const traverseToFirstEmpty = async (startNodeId: Types.ObjectId): Promise<Placem
 const placeUser = async (newUser: IUser, sponsorId: string): Promise<IUser> => {
   const sponsor = await User.findById(sponsorId);
   if (!sponsor) throw new Error('Cannot find sponsor');
-  
-  const preference: string = sponsor.spilloverPreference || 'weaker_leg'; 
-  
+
+  const preference: string = sponsor.spilloverPreference || 'weaker_leg';
+
   const placement = await findPlacement(sponsorId, preference);
-  
+
   newUser.parentId = placement.parentId as any; // Cast if necessary, Types.ObjectId is compatible
   newUser.position = placement.position;
   newUser.sponsorId = new Types.ObjectId(sponsorId);
-  
+
   const savedUser = await newUser.save();
-  
+
   const parent = await User.findById(placement.parentId);
   if (parent) {
     if (placement.position === 'left') {
@@ -98,7 +119,7 @@ const placeUser = async (newUser: IUser, sponsorId: string): Promise<IUser> => {
     }
     await parent.save();
   }
-  
+
   return savedUser;
 };
 

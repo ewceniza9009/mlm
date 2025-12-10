@@ -1,9 +1,10 @@
 import User, { IUser } from '../models/User';
 import Wallet from '../models/Wallet';
 import Commission from '../models/Commission';
+import SystemConfig from '../models/SystemConfig';
 
 export class CommissionEngine {
-  
+
   // 1. Referral Bonus: 10% of Package Price (Fixed $10 for demo)
   static async distributeReferralBonus(sponsorId: string, newUserId: string) {
     const sponsor = await User.findById(sponsorId);
@@ -33,53 +34,93 @@ export class CommissionEngine {
     }
     commission.totalEarned += bonusAmount;
     commission.history.push({
-        amount: bonusAmount,
-        type: 'DIRECT_REFERRAL',
-        relatedUserId: newUserId as any,
-        date: new Date(),
-        details: 'Direct Referral Signup'
+      amount: bonusAmount,
+      type: 'DIRECT_REFERRAL',
+      relatedUserId: newUserId as any,
+      date: new Date(),
+      details: 'Direct Referral Signup'
     });
     await commission.save();
-    
+
     console.log(`[CommissionEngine] Referral Bonus: $${bonusAmount} to ${sponsor.username}`);
   }
 
-  // 2. Binary Pairing Logic (Enhanced with Capping/Flushing)
+  // 2. Binary Pairing Logic (Dynamic from SystemConfig)
   static async runBinaryPairing(userId: string) {
     const user = await User.findById(userId);
     if (!user) return;
 
-    // CONFIGURATION
-    const PAIR_UNIT = 100; // 100 PV : 100 PV
-    const COMMISSION_PER_PAIR = 10; // $10 per pair
-    const DAILY_CAP_AMOUNT = 500; // Max $500 per day (Flashout)
+    // LOAD CONFIG
+    const config = await (SystemConfig as any).getLatest(); // Cast to any to access static
+    const PAIR_UNIT = config.pairUnit || 100;
+    const COMMISSION = config.commissionValue || 10;
+    const DAILY_CAP = config.dailyCapAmount || 500;
+    const RATIO = config.pairRatio || '1:1';
 
-    const left = user.currentLeftPV;
-    const right = user.currentRightPV;
-    
-    // Calculate Pairs
-    const possibleLeftPairs = Math.floor(left / PAIR_UNIT);
-    const possibleRightPairs = Math.floor(right / PAIR_UNIT);
-    let pairs = Math.min(possibleLeftPairs, possibleRightPairs);
-    
+    let left = user.currentLeftPV;
+    let right = user.currentRightPV;
+
+    let pairs = 0;
+    let usedLeft = 0;
+    let usedRight = 0;
+
+    // --- RATIO LOGIC ---
+    if (RATIO === '1:1') {
+      const possibleLeft = Math.floor(left / PAIR_UNIT);
+      const possibleRight = Math.floor(right / PAIR_UNIT);
+      pairs = Math.min(possibleLeft, possibleRight);
+      usedLeft = pairs * PAIR_UNIT;
+      usedRight = pairs * PAIR_UNIT;
+    }
+    else if (RATIO === '1:2') {
+      // 1 part Left, 2 parts Right
+      // Check max pairs based on Left
+      // Check max pairs based on Right (divided by 2 parts)
+      const possibleLeft = Math.floor(left / PAIR_UNIT);
+      const possibleRight = Math.floor(right / (PAIR_UNIT * 2));
+      pairs = Math.min(possibleLeft, possibleRight);
+      usedLeft = pairs * PAIR_UNIT;
+      usedRight = pairs * (PAIR_UNIT * 2);
+
+      // If no pairs, try REVERSE (2:1)? Some systems allow 1:2 OR 2:1 automatically.
+      // For strictest Epixel definition, 1:2 means Left=1 Unit, Right=2 Units.
+      // Often '1:2 or 2:1' means "Weak leg * 2 <= Strong Leg"
+      if (pairs === 0) {
+        // Try Swap logic if supported (2:1 check)
+        // const possibleRightSwap = Math.floor(right / PAIR_UNIT);
+        // const possibleLeftSwap = Math.floor(left / (PAIR_UNIT * 2));
+        // ... logic loop ... 
+        // keeping simple for now as per specific request
+      }
+    }
+    else if (RATIO === '2:1') {
+      const possibleLeft = Math.floor(left / (PAIR_UNIT * 2));
+      const possibleRight = Math.floor(right / PAIR_UNIT);
+      pairs = Math.min(possibleLeft, possibleRight);
+      usedLeft = pairs * (PAIR_UNIT * 2);
+      usedRight = pairs * PAIR_UNIT;
+    }
+
     if (pairs > 0) {
-      let payout = pairs * COMMISSION_PER_PAIR;
-      const usedPV = pairs * PAIR_UNIT;
+      let payout = pairs * COMMISSION;
 
       // --- CAPPING LOGIC (FLASHOUT) ---
+      // Real implementation should check *todays* earnings from history, 
+      // but simple version is capped per transaction for demo.
+      // Ideally: const todayEarnings = await Commission.getDailyEarnings(userId);
       let isCapped = false;
-      if (payout > DAILY_CAP_AMOUNT) {
-        payout = DAILY_CAP_AMOUNT;
+      if (payout > DAILY_CAP) {
+        payout = DAILY_CAP;
         isCapped = true;
       }
 
       // Update User PV (Flush used PV)
-      user.currentLeftPV -= usedPV;
-      user.currentRightPV -= usedPV;
+      user.currentLeftPV -= usedLeft;
+      user.currentRightPV -= usedRight;
       await user.save();
 
       // Credit Wallet
-      await this.creditWallet(user._id.toString(), payout, 'BINARY_BONUS', `Matched ${pairs} pairs.${isCapped ? ' (Capped)' : ''}`);
+      await this.creditWallet(user._id.toString(), payout, 'BINARY_BONUS', `Matched ${pairs} pairs (${RATIO}).${isCapped ? ' (Capped)' : ''}`);
 
       // Update Commission Stats
       await this.updateCommissionStats(user._id.toString(), payout, 'BINARY_BONUS');
@@ -91,15 +132,15 @@ export class CommissionEngine {
 
       // --- CHECK RANK ADVANCEMENT ---
       await this.checkRankAdvancement(user);
-      
-      console.log(`[CommissionEngine] User ${user.username}: Matched ${pairs} pairs. Payout $${payout}.`);
+
+      console.log(`[CommissionEngine] User ${user.username}: Matched ${pairs} pairs (${RATIO}). Payout $${payout}.`);
     }
   }
 
   // 3. Matching Bonus (Unilevel logic on top of Binary)
   static async distributeMatchingBonus(earnerId: string, binaryIncome: number) {
     const generations = [0.10, 0.05, 0.02]; // L1: 10%, L2: 5%, L3: 2%
-    
+
     let currentUser = await User.findById(earnerId);
     let currentLevel = 0;
 
@@ -109,13 +150,13 @@ export class CommissionEngine {
       if (!sponsor) break;
 
       const bonusAmount = binaryIncome * generations[currentLevel];
-      
+
       if (bonusAmount > 0) {
         await this.creditWallet(
-          sponsor._id.toString(), 
-          bonusAmount, 
-          'MATCHING_BONUS', 
-          `Matching bonus (${(generations[currentLevel]*100)}%) from ${currentUser.username}'s binary income`
+          sponsor._id.toString(),
+          bonusAmount,
+          'MATCHING_BONUS',
+          `Matching bonus (${(generations[currentLevel] * 100)}%) from ${currentUser.username}'s binary income`
         );
         await this.updateCommissionStats(sponsor._id.toString(), bonusAmount, 'MATCHING_BONUS');
       }
@@ -141,7 +182,7 @@ export class CommissionEngine {
     if (newRank !== user.rank) {
       user.rank = newRank;
       await user.save();
-      
+
       // One-time Rank Bonus
       const rankBonus = newRank === 'Silver' ? 50 : newRank === 'Gold' ? 200 : 1000;
       await this.creditWallet(user._id.toString(), rankBonus, 'RANK_ACHIEVEMENT', `Promoted to ${newRank}`);
@@ -152,7 +193,7 @@ export class CommissionEngine {
   // 5. Update Upline PV
   static async updateUplinePV(userId: string, pvAmount: number) {
     let currentUser = await User.findById(userId);
-    
+
     while (currentUser && currentUser.parentId) {
       const parent = await User.findById(currentUser.parentId);
       if (!parent) break;
@@ -162,9 +203,9 @@ export class CommissionEngine {
       } else if (parent.rightChildId && parent.rightChildId.toString() === currentUser._id.toString()) {
         parent.currentRightPV += pvAmount;
       }
-      
+
       await parent.save();
-      
+
       // Trigger binary check for parent immediately
       await this.runBinaryPairing(parent._id.toString());
 
@@ -177,7 +218,7 @@ export class CommissionEngine {
   private static async creditWallet(userId: string, amount: number, type: string, description: string) {
     let wallet = await Wallet.findOne({ userId });
     if (!wallet) wallet = new Wallet({ userId, balance: 0 });
-    
+
     wallet.balance += amount;
     wallet.transactions.push({
       type: 'COMMISSION',

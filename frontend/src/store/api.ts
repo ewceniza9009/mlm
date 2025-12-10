@@ -3,7 +3,7 @@ import { RootState } from './index';
 
 export const api = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ 
+  baseQuery: fetchBaseQuery({
     baseUrl: 'http://localhost:5000/api/v1/',
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.token;
@@ -49,20 +49,20 @@ export const api = createApi({
       invalidatesTags: ['Wallet'],
     }),
     updateProfile: builder.mutation({
-        query: (data) => ({
-            url: 'auth/profile',
-            method: 'PUT',
-            body: data
-        }),
-        invalidatesTags: ['User']
+      query: (data) => ({
+        url: 'auth/profile',
+        method: 'PUT',
+        body: data
+      }),
+      invalidatesTags: ['User']
     }),
     getSystemLogs: builder.query({
-        query: () => 'admin/logs',
-        providesTags: ['SystemLogs']
-    }),    
+      query: () => 'admin/logs',
+      providesTags: ['SystemLogs']
+    }),
     getAdminCommissions: builder.query({
-        query: () => 'admin/commissions',
-        providesTags: ['Commissions']
+      query: () => 'admin/commissions',
+      providesTags: ['Commissions']
     }),
     runCommissions: builder.mutation({
       query: () => ({
@@ -71,18 +71,31 @@ export const api = createApi({
       }),
       invalidatesTags: ['Wallet', 'User', 'SystemLogs', 'Commissions'],
     }),
+    getConfig: builder.query({
+      query: () => 'admin/config',
+    }),
+    updateConfig: builder.mutation({
+      query: (data) => ({
+        url: 'admin/config',
+        method: 'PUT',
+        body: data,
+      }),
+      // Invalidate nothing or maybe refetch config if needed, but result returns new config
+    }),
   }),
 });
 
-export const { 
-  useGetTreeQuery, 
-  useLoginMutation, 
-  useRegisterMutation, 
+export const {
+  useGetTreeQuery,
+  useLoginMutation,
+  useRegisterMutation,
   useGetUplineQuery,
   useGetWalletQuery,
   useRequestWithdrawalMutation,
   useUpdateProfileMutation,
   useRunCommissionsMutation,
   useGetSystemLogsQuery,
-  useGetAdminCommissionsQuery
+  useGetAdminCommissionsQuery,
+  useGetConfigQuery,
+  useUpdateConfigMutation
 } = api;

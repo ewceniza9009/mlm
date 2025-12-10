@@ -46,8 +46,8 @@ const AdminCommissions = () => {
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Commission Runs</h1>
-                <div className="flex gap-2 w-full md:w-auto">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Commission Runs</h1>
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                     <div className="relative flex-1 md:w-64">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
@@ -69,7 +69,8 @@ const AdminCommissions = () => {
 
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden shadow-sm dark:shadow-none flex flex-col min-h-[500px]">
                 <div className="overflow-x-auto flex-1">
-                    <table className="w-full text-left text-gray-700 dark:text-slate-300">
+                    {/* Desktop Table View */}
+                    <table className="w-full text-left text-gray-700 dark:text-slate-300 hidden md:table">
                         <thead className="bg-gray-50 dark:bg-slate-900 text-gray-500 dark:text-slate-400 uppercase text-xs font-semibold">
                             <tr>
                                 <th className="px-6 py-4 cursor-pointer hover:text-teal-500" onClick={() => handleSort('date')}>
@@ -123,6 +124,48 @@ const AdminCommissions = () => {
                             )}
                         </tbody>
                     </table>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden divide-y divide-gray-200 dark:divide-slate-700">
+                        {commissions && commissions.length > 0 ? (
+                            commissions.map((item: any, idx: number) => (
+                                <div key={idx} className="p-4 space-y-3">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="text-sm text-gray-500 dark:text-slate-400">
+                                                {new Date(item.date).toLocaleDateString()}
+                                            </div>
+                                            <div className="font-bold text-gray-900 dark:text-white text-lg">
+                                                {item.username}
+                                            </div>
+                                        </div>
+                                        <div className="text-green-600 dark:text-green-400 font-mono font-bold text-lg">
+                                            ${item.amount.toFixed(2)}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <span className="bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 px-2 py-1 rounded text-xs font-bold border border-blue-100 dark:border-blue-500/20">
+                                            {item.type.replace('_', ' ')}
+                                        </span>
+                                        <span className="text-green-600 bg-green-50 dark:text-green-500 dark:bg-green-500/10 px-2 py-1 rounded text-xs font-bold border border-green-100 dark:border-green-500/20">
+                                            Paid
+                                        </span>
+                                    </div>
+
+                                    {item.details && (
+                                        <div className="text-sm text-gray-500 dark:text-slate-400 bg-gray-50 dark:bg-slate-700/50 p-2 rounded">
+                                            {item.details}
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        ) : (
+                            <div className="p-8 text-center text-gray-500 dark:text-slate-500">
+                                No commission history found.
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Pagination */}

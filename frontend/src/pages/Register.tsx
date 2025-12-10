@@ -38,7 +38,7 @@ const Register = () => {
             <span className="bg-teal-500/20 text-teal-300 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-teal-500/30">
               Join the Network
             </span>
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mt-4 leading-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mt-4 leading-tight">
               Select Your <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-purple-400">
                 Entry Level

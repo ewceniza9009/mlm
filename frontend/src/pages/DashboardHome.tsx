@@ -23,8 +23,8 @@ const DashboardHome = () => {
   return (
     <div className="flex flex-col h-full space-y-4">
       {/* Header & Toggle */}
-      <div className="flex items-center justify-between shrink-0">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
           {isOverviewExpanded ? 'Overview' : 'Network Tree'}
         </h1>
         <button
@@ -40,7 +40,7 @@ const DashboardHome = () => {
       {isOverviewExpanded && (
         <div className="space-y-6 shrink-0 animation-fade-in">
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             <StatsCard
               title="Total Earnings"
               value={`$${wallet?.balance?.toFixed(2) || '0.00'}`}

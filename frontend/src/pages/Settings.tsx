@@ -64,23 +64,23 @@ const Settings = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-12 animate-fade-in-up">
-      <div className="flex items-center gap-4 mb-8">
+    <div className="max-w-7xl mx-auto space-y-6 md:space-y-8 pb-12 animate-fade-in-up">
+      <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
         <div className="bg-teal-500/10 p-3 rounded-2xl">
           <SettingsIcon size={32} className="text-teal-500" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings & Preferences</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">Settings & Preferences</h1>
           <p className="text-slate-500 dark:text-slate-400">Manage your account and system configuration</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
 
         {/* LEFT COLUMN - USER PREFERENCES */}
         <div className="lg:col-span-1 space-y-8">
           {/* PROFILE CARD */}
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 p-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 p-4 md:p-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl">
                 {user?.username?.charAt(0).toUpperCase()}
@@ -106,7 +106,7 @@ const Settings = () => {
           </div>
 
           {/* NETWORK PREFERENCES */}
-          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 p-6 shadow-xl shadow-slate-200/50 dark:shadow-none relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 p-4 md:p-6 shadow-xl shadow-slate-200/50 dark:shadow-none relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5">
               <Network size={100} />
             </div>
@@ -144,13 +144,13 @@ const Settings = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 rounded-3xl p-8 text-gray-900 dark:text-white shadow-xl dark:shadow-2xl relative overflow-hidden border border-gray-100 dark:border-slate-700"
+              className="bg-white dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 rounded-3xl p-4 md:p-8 text-gray-900 dark:text-white shadow-xl dark:shadow-2xl relative overflow-hidden border border-gray-100 dark:border-slate-700"
             >
               {/* Decorative Background - Dark Mode Only */}
               <div className="hidden dark:block absolute -top-24 -right-24 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl"></div>
               <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-purple-500"></div>
 
-              <div className="flex items-center gap-3 mb-8 relative z-10">
+              <div className="flex items-center gap-3 mb-6 md:mb-8 relative z-10">
                 <div className="bg-teal-50 dark:bg-teal-500/20 p-2 rounded-lg">
                   <Sliders className="text-teal-600 dark:text-teal-400" size={24} />
                 </div>
@@ -160,7 +160,7 @@ const Settings = () => {
                 </div>
               </div>
 
-              <form onSubmit={handleSaveAdmin} className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+              <form onSubmit={handleSaveAdmin} className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 relative z-10">
 
                 {/* Binary Settings Group */}
                 <div className="md:col-span-2">

@@ -50,7 +50,7 @@ const Login = () => {
 
         {/* Right Side: Login Card */}
         <div className="w-full md:w-1/2 flex items-center justify-center">
-          <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative">
+          <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 p-6 md:p-8 rounded-3xl shadow-2xl relative">
             {/* Glow Effect behind card */}
             <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-purple-600 rounded-3xl blur opacity-20 -z-10"></div>
 

@@ -92,13 +92,13 @@ const AdminPackages = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                    <Package size={32} className="text-teal-600 dark:text-teal-400" /> Package Management
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                    <Package size={24} className="md:w-8 md:h-8 text-teal-600 dark:text-teal-400" /> Package Management
                 </h1>
                 <button
                     onClick={handleOpenCreate}
-                    className="bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-bold transition-colors"
+                    className="w-full sm:w-auto bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 font-bold transition-colors"
                 >
                     <Plus size={20} /> Create Package
                 </button>
@@ -111,7 +111,8 @@ const AdminPackages = () => {
                     <div className="p-8 text-center text-gray-500">No packages found. Create one to get started!</div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left">
+                        {/* Desktop Table */}
+                        <table className="w-full text-left hidden md:table">
                             <thead className="bg-gray-50 dark:bg-slate-900/50 text-gray-500 dark:text-slate-400 uppercase text-xs font-semibold">
                                 <tr>
                                     <th className="px-6 py-4">Name</th>
@@ -152,6 +153,42 @@ const AdminPackages = () => {
                                 ))}
                             </tbody>
                         </table>
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden divide-y divide-gray-200 dark:divide-slate-700">
+                            {packages.map((pkg: any) => (
+                                <div key={pkg._id} className="p-4 space-y-3">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-bold text-gray-900 dark:text-white text-lg">{pkg.name}</div>
+                                            <div className="text-teal-600 dark:text-teal-400 font-mono font-bold">${pkg.price}</div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handleOpenEdit(pkg)} className="p-2 text-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button onClick={() => handleDelete(pkg._id)} className="p-2 text-red-600 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2 items-center">
+                                        <span className="text-gray-600 dark:text-slate-300 font-mono text-sm bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded">
+                                            {pkg.pv} PV
+                                        </span>
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${pkg.isActive ? 'bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400'}`}>
+                                            {pkg.isActive ? 'Active' : 'Inactive'}
+                                        </span>
+                                        {pkg.badge && (
+                                            <span className="bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 px-2 py-1 rounded text-xs">
+                                                {pkg.badge}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
@@ -164,7 +201,7 @@ const AdminPackages = () => {
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+                            className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-11/12 md:w-full md:max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
                         >
                             <div className="p-6 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
                                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">

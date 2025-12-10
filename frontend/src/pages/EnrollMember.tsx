@@ -108,14 +108,14 @@ const EnrollMember = () => {
         <span>Back to Dashboard</span>
       </button>
 
-      <div className="bg-white dark:bg-slate-800 p-8 rounded-xl border border-gray-200 dark:border-slate-700 shadow-xl">
-        <div className="flex items-center space-x-3 mb-8">
-          <div className="w-12 h-12 bg-teal-500 rounded-lg flex items-center justify-center">
-            <UserPlus className="text-white w-7 h-7" />
+      <div className="bg-white dark:bg-slate-800 p-5 md:p-8 rounded-xl border border-gray-200 dark:border-slate-700 shadow-xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 md:mb-8">
+          <div className="w-12 h-12 bg-teal-500 rounded-lg flex items-center justify-center shrink-0">
+            <UserPlus className="text-white w-6 h-6 md:w-7 md:h-7" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Enroll New Member</h1>
-            <p className="text-gray-500 dark:text-slate-400">Add a new distributor directly to your downline</p>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Enroll New Member</h1>
+            <p className="text-sm md:text-base text-gray-500 dark:text-slate-400">Add a new distributor directly to your downline</p>
           </div>
         </div>
 
@@ -128,9 +128,9 @@ const EnrollMember = () => {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* User Details Section */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-2">1. Account Details</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-slate-300">New Username</label>
                 <input
@@ -157,7 +157,7 @@ const EnrollMember = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Temporary Password</label>
                 <input
@@ -188,7 +188,7 @@ const EnrollMember = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-2">2. Select Package</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
               {packages.map((pkg: any) => (
                 <div
                   key={pkg._id}
@@ -218,7 +218,7 @@ const EnrollMember = () => {
           </div>
 
           <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
               {/* Sponsor Input with Autocomplete */}
               <div className="flex items-center space-x-2 relative" ref={searchRef}>
                 <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Sponsor:</label>
@@ -235,7 +235,7 @@ const EnrollMember = () => {
                       if (formData.sponsorUsername) setShowDropdown(true);
                     }}
                     autoComplete="off"
-                    className="bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded px-2 py-1 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 w-40"
+                    className="bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded px-2 py-1 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 w-full md:w-40"
                   />
 
                   {/* Suggestions Dropdown */}
@@ -262,7 +262,7 @@ const EnrollMember = () => {
               <button
                 type="submit"
                 disabled={isLoading || !currentUser?.username}
-                className={`bg-teal-600 hover:bg-teal-500 text-white px-8 py-3 rounded-lg font-bold transition-all transform active:scale-95 flex items-center space-x-2 ${isLoading || !currentUser?.username ? 'opacity-50 cursor-not-allowed' : ''
+                className={`bg-teal-600 hover:bg-teal-500 text-white px-8 py-3 rounded-lg font-bold transition-all transform active:scale-95 flex items-center justify-center space-x-2 w-full md:w-auto ${isLoading || !currentUser?.username ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
               >
                 {isLoading ? <span>Processing...</span> : (

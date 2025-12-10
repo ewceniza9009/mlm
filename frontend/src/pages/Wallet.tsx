@@ -53,8 +53,8 @@ const WalletPage = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-        <WalletIcon size={32} className="text-teal-600 dark:text-teal-400" /> My Wallet
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+        <WalletIcon size={24} className="md:w-8 md:h-8 text-teal-600 dark:text-teal-400" /> My Wallet
       </h1>
 
       {/* Balance Cards */}
@@ -67,7 +67,7 @@ const WalletPage = () => {
 
         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Request Payout</h3>
-          <form onSubmit={handleWithdraw} className="flex gap-4">
+          <form onSubmit={handleWithdraw} className="flex flex-col sm:flex-row gap-4">
             <input
               type="number"
               value={amount}
@@ -78,7 +78,7 @@ const WalletPage = () => {
             />
             <button
               disabled={isWithdrawing}
-              className="bg-teal-600 hover:bg-teal-500 text-white px-6 py-3 rounded-lg font-bold disabled:opacity-50 transition-colors"
+              className="bg-teal-600 hover:bg-teal-500 text-white px-6 py-3 rounded-lg font-bold disabled:opacity-50 transition-colors w-full sm:w-auto"
             >
               {isWithdrawing ? '...' : 'Withdraw'}
             </button>
@@ -89,8 +89,8 @@ const WalletPage = () => {
 
       {/* Transactions */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden shadow-sm dark:shadow-none flex flex-col min-h-[500px]">
-        <div className="p-6 border-b border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Transaction History</h3>
+        <div className="p-4 md:p-6 border-b border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Transaction History</h3>
           <div className="flex gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -113,7 +113,8 @@ const WalletPage = () => {
         </div>
 
         <div className="overflow-x-auto flex-1">
-          <table className="w-full text-left text-gray-600 dark:text-slate-300">
+          {/* Desktop Table */}
+          <table className="w-full text-left text-gray-600 dark:text-slate-300 hidden md:table">
             <thead className="bg-gray-50 dark:bg-slate-900 text-gray-500 dark:text-slate-400 uppercase text-xs font-semibold">
               <tr>
                 <th className={getHeaderClass('type')} onClick={() => handleSort('type')}>
@@ -168,6 +169,54 @@ const WalletPage = () => {
               )}
             </tbody>
           </table>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden divide-y divide-gray-200 dark:divide-slate-700">
+            {transactions.length > 0 ? (
+              transactions.map((tx: any) => (
+                <div key={tx._id} className="p-4 space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-1.5 rounded-full ${tx.type === 'COMMISSION' || tx.type === 'DEPOSIT'
+                        ? 'bg-green-100 dark:bg-green-500/20'
+                        : 'bg-red-100 dark:bg-red-500/20'
+                        }`}>
+                        {tx.type === 'COMMISSION' && <ArrowDownLeft className="text-green-600 dark:text-green-400" size={16} />}
+                        {tx.type === 'WITHDRAWAL' && <ArrowUpRight className="text-red-600 dark:text-red-400" size={16} />}
+                        {tx.type === 'DEPOSIT' && <ArrowDownLeft className="text-green-600 dark:text-green-400" size={16} />}
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-900 dark:text-white capitalize">
+                          {tx.type.replace('_', ' ').toLowerCase()}
+                        </div>
+                        <div className="text-xs text-gray-400 dark:text-slate-500">
+                          {new Date(tx.date).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className={`font-mono font-bold text-lg ${tx.amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500 dark:text-slate-400 truncate max-w-[70%]">
+                      {tx.description}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${tx.status === 'COMPLETED' ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-500' :
+                      tx.status === 'PENDING' ? 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-500' : 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-500'
+                      }`}>
+                      {tx.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-8 text-center text-gray-500 dark:text-slate-500">
+                No transactions found.
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Pagination */}

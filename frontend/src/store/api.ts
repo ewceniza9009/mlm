@@ -37,7 +37,11 @@ export const api = createApi({
       }),
     }),
     getWallet: builder.query({
-      query: () => 'wallet',
+      query: (params) => {
+        if (!params) return 'wallet';
+        const qs = new URLSearchParams(params).toString();
+        return `wallet?${qs}`;
+      },
       providesTags: ['Wallet'],
     }),
     requestWithdrawal: builder.mutation({
@@ -57,11 +61,17 @@ export const api = createApi({
       invalidatesTags: ['User']
     }),
     getSystemLogs: builder.query({
-      query: () => 'admin/logs',
+      query: (params) => {
+        const qs = new URLSearchParams(params).toString();
+        return `admin/logs?${qs}`;
+      },
       providesTags: ['SystemLogs']
     }),
     getAdminCommissions: builder.query({
-      query: () => 'admin/commissions',
+      query: (params) => {
+        const qs = new URLSearchParams(params).toString();
+        return `admin/commissions?${qs}`;
+      },
       providesTags: ['Commissions']
     }),
     runCommissions: builder.mutation({

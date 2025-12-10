@@ -4,11 +4,103 @@ import Wallet from '../models/Wallet';
 export const getMyWallet = async (req: Request, res: Response) => {
   try {
     const userId = req.user.id;
-    const wallet = await Wallet.findOne({ userId }).sort({ 'transactions.date': -1 });
-    
-    if (!wallet) return res.status(404).json({ message: 'Wallet not found' });
-    res.json(wallet);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const search = req.query.search as string;
+    const format = req.query.format as string;
+    const sortBy = (req.query.sortBy as string) || 'date';
+    const sortOrder = req.query.order === 'asc' ? 1 : -1;
+
+    let wallet = await Wallet.findOne({ userId });
+
+    // Auto-create wallet if missing (Self-healing for seeded/legacy users)
+    if (!wallet) {
+      wallet = await Wallet.create({
+        userId,
+        balance: 0,
+        transactions: []
+      });
+    }
+
+    // If CSV, export all matching without pagination
+    if (format === 'csv') {
+      let txs = wallet.transactions;
+
+      // Filter in memory since it's an embedded array and we have the doc
+      if (search) {
+        const lowerSearch = search.toLowerCase();
+        txs = txs.filter((t: any) =>
+          t.description.toLowerCase().includes(lowerSearch) ||
+          t.type.toLowerCase().includes(lowerSearch) ||
+          t.amount.toString().includes(lowerSearch)
+        );
+      }
+
+      // Sort
+      txs.sort((a: any, b: any) => {
+        const valA = a[sortBy];
+        const valB = b[sortBy];
+        if (valA < valB) return -1 * sortOrder;
+        if (valA > valB) return 1 * sortOrder;
+        return 0;
+      });
+
+      const csv = [
+        'Date,Type,Amount,Description,Status',
+        ...txs.map((t: any) => `"${new Date(t.date).toISOString()}","${t.type}","${t.amount}","${t.description.replace(/"/g, '""')}","${t.status}"`)
+      ].join('\n');
+
+      res.header('Content-Type', 'text/csv');
+      res.attachment('wallet_transactions.csv');
+      return res.send(csv);
+    }
+
+    // For normal paginated response, we can also filter in memory for simplicity
+    // (unless array is massive, but for 1 document it's usually fine.
+    // If it was massive, we'd use aggregation, but let's stick to aggregation for consistency with server-side request pattern if we want strictly server side)
+
+    // Actually, let's do in-memory filtering/slicing on the found subdoc for simplicity
+    // because `unwind` on a single document is overkill unless we expect thousands of transactions.
+    // BUT user asked for "Serverside" which usually implies we don't send everything.
+    // So let's filter the array in memory on the server before sending to client.
+
+    let filteredTxs = wallet.transactions;
+
+    if (search) {
+      const lowerSearch = search.toLowerCase();
+      filteredTxs = filteredTxs.filter((t: any) =>
+        t.description.toLowerCase().includes(lowerSearch) ||
+        t.type.toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    const total = filteredTxs.length;
+
+    // Sort
+    filteredTxs.sort((a: any, b: any) => {
+      const valA = a[sortBy];
+      const valB = b[sortBy];
+      if (valA < valB) return -1 * sortOrder;
+      if (valA > valB) return 1 * sortOrder;
+      return 0;
+    });
+
+    // Paginate
+    const paginatedTxs = filteredTxs.slice((page - 1) * limit, page * limit);
+
+    res.json({
+      _id: wallet._id,
+      balance: wallet.balance,
+      transactions: {
+        data: paginatedTxs,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -31,7 +123,7 @@ export const requestWithdrawal = async (req: Request, res: Response) => {
 
     // Deduct balance immediately to prevent double spend
     wallet.balance -= amount;
-    
+
     wallet.transactions.unshift({
       type: 'WITHDRAWAL',
       amount: -amount,
@@ -52,7 +144,7 @@ export const requestWithdrawal = async (req: Request, res: Response) => {
 export const processWithdrawal = async (req: Request, res: Response) => {
   try {
     const { userId, transactionId, action } = req.body; // action: 'APPROVE' | 'REJECT'
-    
+
     const wallet = await Wallet.findOne({ userId });
     if (!wallet) return res.status(404).json({ message: 'Wallet not found' });
 

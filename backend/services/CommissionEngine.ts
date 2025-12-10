@@ -5,13 +5,15 @@ import SystemConfig from '../models/SystemConfig';
 
 export class CommissionEngine {
 
-  // 1. Referral Bonus: 10% of Package Price
+  // 1. Referral Bonus: Dynamic % based on System Config
   static async distributeReferralBonus(sponsorId: string, newUserId: string, packagePrice: number) {
     const sponsor = await User.findById(sponsorId);
     if (!sponsor) return;
 
-    // Default to 10% if not in config
-    const bonusAmount = packagePrice * 0.10;
+    // Load Config
+    const config = await (SystemConfig as any).getLatest();
+    const percent = config.referralBonusPercentage || 10;
+    const bonusAmount = packagePrice * (percent / 100);
 
     // Credit Wallet
     let wallet = await Wallet.findOne({ userId: sponsor._id });
@@ -138,9 +140,16 @@ export class CommissionEngine {
     }
   }
 
-  // 3. Matching Bonus (Unilevel logic on top of Binary)
+  // 3. Matching Bonus (Dynamic Generations from Config)
   static async distributeMatchingBonus(earnerId: string, binaryIncome: number) {
-    const generations = [0.10, 0.05, 0.02]; // L1: 10%, L2: 5%, L3: 2%
+    // Load Config
+    const config = await (SystemConfig as any).getLatest();
+    const rawGenerations = config.matchingBonusGenerations && config.matchingBonusGenerations.length > 0
+      ? config.matchingBonusGenerations
+      : [10, 5, 2];
+
+    // Convert 10 -> 0.10
+    const generations = rawGenerations.map((g: number) => g / 100);
 
     let currentUser = await User.findById(earnerId);
     let currentLevel = 0;

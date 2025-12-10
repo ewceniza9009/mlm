@@ -10,6 +10,8 @@ export interface ISystemConfig extends Document {
     // Limits
     dailyCapAmount: number; // e.g. 500
     flushCarryForward: boolean; // if true, flush non-earning leg too? usually false
+    referralBonusPercentage: number; // e.g. 10 for 10%
+    matchingBonusGenerations: number[]; // e.g. [10, 5, 2] for Levels 1, 2, 3
 
     // Registration
     defaultSponsor: string; // 'root'
@@ -31,6 +33,8 @@ const systemConfigSchema = new Schema<ISystemConfig>({
     pairUnit: { type: Number, default: 100 },
     dailyCapAmount: { type: Number, default: 500 },
     flushCarryForward: { type: Boolean, default: false },
+    referralBonusPercentage: { type: Number, default: 10 },
+    matchingBonusGenerations: { type: [Number], default: [10, 5, 2] },
     defaultSponsor: { type: String, default: 'root' },
     holdingTankMode: { type: Boolean, default: false }
 }, { timestamps: true });

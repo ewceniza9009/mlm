@@ -96,15 +96,7 @@ The frontend is a React application powered by Vite.
 -   **API Connection Failed**: Check if the backend is running on port `5000`. If you changed the backend port, update `frontend/src/store/api.ts` to match.
 -   **Login Issues**: Ensure you have registered a user or seeded the database. The initial "root" user might need to be created via the registration page or directly in the DB if not handled by a seed script.
 
-## Screenshots
-
-<img width="1915" height="913" alt="image" src="https://github.com/user-attachments/assets/8a0a580f-de98-49e0-ae99-e968eb70f4fb" />
-<img width="1919" height="909" alt="image" src="https://github.com/user-attachments/assets/8dc052d3-44b4-4727-ae71-e0ec5211aeb5" />
-<img width="1919" height="911" alt="image" src="https://github.com/user-attachments/assets/a09b87d1-75ab-4355-ba40-312ab490bfb5" />
-<img width="1919" height="919" alt="image" src="https://github.com/user-attachments/assets/c84b8aa1-8516-4b54-99f1-e6d518d0ba2f" />
-<img width="1905" height="908" alt="image" src="https://github.com/user-attachments/assets/2f3799fe-8e6e-4f81-b547-9d801abb1b42" />
-<img width="1919" height="910" alt="image" src="https://github.com/user-attachments/assets/9252b3f6-7680-4452-9d56-1df032c7cae3" />
-
+## VIDEO DEMO
 
 https://github.com/user-attachments/assets/381e6f26-e5a0-4947-80d7-8414c1b4df6e
 

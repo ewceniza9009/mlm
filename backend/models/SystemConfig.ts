@@ -13,6 +13,7 @@ export interface ISystemConfig extends Document {
 
     // Registration
     defaultSponsor: string; // 'root'
+    holdingTankMode: boolean; // if true, new users go to holding tank
 }
 
 const systemConfigSchema = new Schema<ISystemConfig>({
@@ -30,7 +31,8 @@ const systemConfigSchema = new Schema<ISystemConfig>({
     pairUnit: { type: Number, default: 100 },
     dailyCapAmount: { type: Number, default: 500 },
     flushCarryForward: { type: Boolean, default: false },
-    defaultSponsor: { type: String, default: 'root' }
+    defaultSponsor: { type: String, default: 'root' },
+    holdingTankMode: { type: Boolean, default: false }
 }, { timestamps: true });
 
 // Singleton helper

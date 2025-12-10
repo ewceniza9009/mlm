@@ -3,6 +3,7 @@ import User from '../models/User';
 import Commission from '../models/Commission';
 import Wallet from '../models/Wallet';
 import Package from '../models/Package';
+import SystemConfig from '../models/SystemConfig';
 import spilloverService from '../services/spilloverService';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -20,8 +21,8 @@ export const register = async (req: Request, res: Response) => {
     let sponsor = null;
     if (sponsorUsername) {
       sponsor = await User.findOne({ username: { $regex: new RegExp(`^${sponsorUsername}$`, 'i') } });
-      if (!sponsor && sponsorUsername.toLowerCase() !== 'root') { 
-         return res.status(404).json({ message: 'Sponsor not found' });
+      if (!sponsor && sponsorUsername.toLowerCase() !== 'root') {
+        return res.status(404).json({ message: 'Sponsor not found' });
       }
     } else {
       // Allow first user without sponsor
@@ -31,7 +32,7 @@ export const register = async (req: Request, res: Response) => {
 
     // Resolve Package
     const pkg = await Package.findOne({ name: packageName });
-    
+
     // Hash Password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -43,18 +44,32 @@ export const register = async (req: Request, res: Response) => {
       enrollmentPackage: pkg ? pkg._id : null
     });
 
-    // Placement
+    // Check Holding Tank Mode
+    const config = await (SystemConfig as any).getLatest();
+    const isHoldingTank = config.holdingTankMode;
+
     let savedUser;
-    if (sponsor) {
+
+    if (isHoldingTank && sponsor) {
+      // PARK USER
+      newUser.isPlaced = false;
+      newUser.sponsorId = sponsor._id as any;
+      savedUser = await newUser.save();
+      // Do NOT trigger PV or Commissions yet
+    }
+    else if (sponsor) {
+      // AUTO PLACE
+      newUser.isPlaced = true;
       savedUser = await spilloverService.placeUser(newUser, sponsor.id);
-      
+
       // Trigger Bonuses (Lazy Load to avoid circular dependency issues)
       const { CommissionEngine } = require('../services/CommissionEngine');
       await CommissionEngine.distributeReferralBonus(sponsor.id, savedUser._id.toString());
       if (pkg && pkg.pv) {
-         await CommissionEngine.updateUplinePV(savedUser._id.toString(), pkg.pv);
+        await CommissionEngine.updateUplinePV(savedUser._id.toString(), pkg.pv);
       }
     } else {
+      newUser.isPlaced = true;
       savedUser = await newUser.save();
     }
 
@@ -74,7 +89,7 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    
+
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
@@ -82,19 +97,19 @@ export const login = async (req: Request, res: Response) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user._id, username: user.username }, 
-      process.env.JWT_SECRET || 'secret', 
+      { id: user._id, username: user.username },
+      process.env.JWT_SECRET || 'secret',
       { expiresIn: '1d' }
     );
 
-    res.json({ 
-        token, 
-        user: { 
-            id: user._id, 
-            username: user.username, 
-            email: user.email, 
-            role: user.role 
-        } 
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
     });
 
   } catch (err) {

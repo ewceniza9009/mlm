@@ -8,15 +8,15 @@ export const getTree = async (req: Request, res: Response) => {
   try {
     const { rootId } = req.query;
     let root: IUser | null;
-    
+
     if (rootId) {
       root = await User.findById(rootId);
     } else {
       // Default to root user
       root = await User.findOne({ username: 'root' });
       if (!root) {
-         root = await User.findOne({ level: 0 }); 
-      } 
+        root = await User.findOne({ level: 0 });
+      }
     }
 
     if (!root) return res.status(404).json({ message: 'Root not found' });
@@ -94,5 +94,40 @@ export const getUpline = async (req: Request, res: Response) => {
     });
   } catch (err) {
     res.status(500).json({ message: 'Server error retrieving upline' });
+  }
+};
+
+// Search Downline
+export const searchDownline = async (req: Request, res: Response) => {
+  try {
+    const { query } = req.query;
+    // @ts-ignore
+    const currentUserId = req.user._id;
+
+    if (!query || typeof query !== 'string') {
+      return res.status(400).json({ message: 'Search query required' });
+    }
+
+    console.log(`[Search] User: ${currentUserId} Query: ${query}`);
+
+    // Loose search for debugging
+    const searchCondition = {
+      $or: [
+        { username: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } }
+      ]
+    };
+
+    const results = await User.find(searchCondition)
+      .select('username email rank kycStatus enrollmentDate path')
+      .limit(20);
+
+    console.log(`[Search] Found ${results.length} results`);
+
+    res.json(results);
+
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({ message: 'Search failed' });
   }
 };

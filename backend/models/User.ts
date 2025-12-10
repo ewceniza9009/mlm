@@ -12,22 +12,23 @@ export interface IUser extends Document {
   currentLeftPV: number;
   currentRightPV: number;
   enrollmentDate: Date;
-  
+
   // Genealogy Pointers
   sponsorId?: mongoose.Types.ObjectId;
   parentId?: mongoose.Types.ObjectId;
   position?: 'left' | 'right';
-  
+
   // Optimization
   path?: string;
   level: number;
   leftChildId?: mongoose.Types.ObjectId;
   rightChildId?: mongoose.Types.ObjectId;
-  
+
   // Features
   spilloverPreference: 'extreme_left' | 'extreme_right' | 'weaker_leg' | 'balanced';
   multiCenter: boolean;
   rank: 'Bronze' | 'Silver' | 'Gold' | 'Diamond';
+  isPlaced: boolean;
 }
 
 const userSchema = new Schema<IUser>({
@@ -39,6 +40,7 @@ const userSchema = new Schema<IUser>({
   isActive: { type: Boolean, default: true },
   role: { type: String, enum: ['admin', 'distributor'], default: 'distributor' },
   kycStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  isPlaced: { type: Boolean, default: true }, // Default true for legacy/immediate placement
   currentLeftPV: { type: Number, default: 0 },
   currentRightPV: { type: Number, default: 0 },
   enrollmentDate: { type: Date, default: Date.now },
@@ -55,17 +57,17 @@ const userSchema = new Schema<IUser>({
   rightChildId: { type: Schema.Types.ObjectId, ref: 'User' },
 
   // Advanced Features
-  spilloverPreference: { 
-    type: String, 
-    enum: ['extreme_left', 'extreme_right', 'weaker_leg', 'balanced'], 
-    default: 'weaker_leg' 
+  spilloverPreference: {
+    type: String,
+    enum: ['extreme_left', 'extreme_right', 'weaker_leg', 'balanced'],
+    default: 'weaker_leg'
   },
   multiCenter: { type: Boolean, default: false },
   rank: { type: String, enum: ['Bronze', 'Silver', 'Gold', 'Diamond'], default: 'Bronze' }
 });
 
 // Pre-save hook for path/level updates
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (this.isNew && this.parentId) {
     try {
       // Need to cast constructor to Model to access findById
@@ -79,9 +81,9 @@ userSchema.pre('save', async function(next) {
       return next(error as Error);
     }
   } else if (this.isNew && !this.parentId) {
-      // Root node handling
-      this.path = `,${this._id},`;
-      this.level = 0;
+    // Root node handling
+    this.path = `,${this._id},`;
+    this.level = 0;
   }
   next();
 });

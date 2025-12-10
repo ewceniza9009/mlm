@@ -82,6 +82,23 @@ export const api = createApi({
       }),
       // Invalidate nothing or maybe refetch config if needed, but result returns new config
     }),
+
+    // Holding Tank & Search
+    getHoldingTank: builder.query<any, void>({
+      query: () => 'network/holding-tank',
+      providesTags: ['Tree'],
+    }),
+    placeMember: builder.mutation<any, { userId: string, targetParentId: string, position: 'left' | 'right' }>({
+      query: (data) => ({
+        url: 'network/place-member',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Tree'],
+    }),
+    searchDownline: builder.query<any[], string>({
+      query: (query) => `network/search-downline?query=${query}`,
+    }),
   }),
 });
 
@@ -97,5 +114,8 @@ export const {
   useGetSystemLogsQuery,
   useGetAdminCommissionsQuery,
   useGetConfigQuery,
-  useUpdateConfigMutation
+  useUpdateConfigMutation,
+  useGetHoldingTankQuery,
+  usePlaceMemberMutation,
+  useLazySearchDownlineQuery
 } = api;

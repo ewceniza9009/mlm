@@ -16,61 +16,70 @@ const TreeVisualizer = ({ data: treeData, isLoading, error }: TreeVisualizerProp
   const containerStyles = {
     width: '100%',
     height: '100%',
-    background: '#0f172a' // slate-900
+    background: 'transparent'
   };
 
   const renderForeignObjectNode = ({ nodeDatum, toggleNode }: { nodeDatum: any, toggleNode: () => void }) => {
-    // Determine rank color
+    // Determine rank color (Top Border Accent)
     let rankColor = 'border-slate-500';
     const rank = nodeDatum.attributes?.rank;
 
-    if (rank === 'Gold') rankColor = 'border-yellow-500';
-    if (rank === 'Silver') rankColor = 'border-gray-300';
-    if (rank === 'Bronze') rankColor = 'border-orange-700';
-    if (rank === 'Diamond') rankColor = 'border-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)]';
+    if (rank === 'Gold') rankColor = 'border-amber-400';
+    if (rank === 'Silver') rankColor = 'border-slate-300';
+    if (rank === 'Bronze') rankColor = 'border-orange-600';
+    if (rank === 'Diamond') rankColor = 'border-cyan-400';
+
+    const isOnline = nodeDatum.attributes?.active;
 
     return (
-      <foreignObject width="240" height="140" x="-120" y="-70">
+      <foreignObject width="260" height="150" x="-130" y="-75">
         <div
-          className={`bg-slate-800 rounded-lg p-3 border-l-4 ${rankColor} shadow-xl cursor-pointer hover:bg-slate-750 transition-all hover:scale-105 flex flex-col justify-between h-full border-t border-r border-b border-slate-700`}
+          className={`relative bg-white dark:bg-[#1a1b23] rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden border-t-4 ${rankColor} border-r border-b border-l border-gray-100 dark:border-white/5 h-full group`}
           onClick={toggleNode}
         >
-          {/* Header */}
-          <div className="flex items-start justify-between pb-2 border-b border-slate-700 mb-2">
-            <div className="flex items-center space-x-2">
-              <div className="bg-slate-700 p-1.5 rounded-full">
-                <User size={16} className="text-teal-400" />
+          <div className="p-4">
+            {/* Header: Avatar & Info */}
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${rank === 'Diamond' ? 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg shadow-cyan-500/20' : 'bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-gray-300'}`}>
+                  {nodeDatum.name.substring(0, 1).toUpperCase()}
+                </div>
+                {isOnline && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#1a1b23] rounded-full"></div>
+                )}
               </div>
-              <div>
-                <p className="text-white font-bold text-sm truncate w-28" title={nodeDatum.name}>
+
+              <div className="overflow-hidden">
+                <h3 className="font-bold text-gray-900 dark:text-white text-sm truncate w-32 leading-tight">
                   {nodeDatum.name}
+                </h3>
+                <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-slate-500 uppercase mt-0.5">
+                  {rank || 'Member'}
                 </p>
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider">{rank || 'Member'}</p>
               </div>
             </div>
-            {nodeDatum.attributes?.active && (
-              <div className="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)]" title="Active"></div>
-            )}
-          </div>
 
-          {/* Payout & PV Stats */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center bg-slate-900/50 p-1.5 rounded text-xs">
-              <span className="text-slate-400">Total Earned:</span>
-              <span className="text-green-400 font-mono font-bold">
+            {/* Stats Row */}
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-2 text-center group-hover:bg-teal-50 dark:group-hover:bg-teal-500/10 transition-colors">
+                <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-0.5">Left PV</p>
+                <p className="text-sm font-bold text-gray-700 dark:text-gray-200 group-hover:text-teal-600 dark:group-hover:text-teal-400">
+                  {nodeDatum.attributes?.leftPV || 0}
+                </p>
+              </div>
+              <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-2 text-center group-hover:bg-purple-50 dark:group-hover:bg-purple-500/10 transition-colors">
+                <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-0.5">Right PV</p>
+                <p className="text-sm font-bold text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                  {nodeDatum.attributes?.rightPV || 0}
+                </p>
+              </div>
+            </div>
+
+            {/* Total Earned Badge (Floating) */}
+            <div className="absolute top-2 right-2">
+              <span className="inline-flex items-center px-2 py-1 rounded bg-green-50 dark:bg-green-500/10 text-[10px] font-bold text-green-700 dark:text-green-400">
                 ${(nodeDatum.attributes?.totalEarned || 0).toLocaleString()}
               </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
-              <div className="bg-slate-700/30 p-1 rounded text-center">
-                <div className="text-slate-500">Left PV</div>
-                <div className="text-white font-mono">{nodeDatum.attributes?.leftPV || 0}</div>
-              </div>
-              <div className="bg-slate-700/30 p-1 rounded text-center">
-                <div className="text-slate-500">Right PV</div>
-                <div className="text-white font-mono">{nodeDatum.attributes?.rightPV || 0}</div>
-              </div>
             </div>
           </div>
         </div>
@@ -99,9 +108,11 @@ const TreeVisualizer = ({ data: treeData, isLoading, error }: TreeVisualizerProp
         pathFunc="step"
         orientation="vertical"
         renderCustomNodeElement={renderForeignObjectNode}
-        nodeSize={{ x: 280, y: 200 }} // Increased spacing for larger cards
-        pathClassFunc={() => 'stroke-slate-600 !stroke-2'}
-        separation={{ siblings: 1.2, nonSiblings: 1.5 }}
+        nodeSize={{ x: 300, y: 250 }} // Increased spacing to prevent overlap
+        pathClassFunc={() => 'stroke-gray-400 dark:stroke-slate-600 !stroke-2'}
+        separation={{ siblings: 1.5, nonSiblings: 2 }}
+        zoom={0.6}
+        scaleExtent={{ min: 0.1, max: 2 }}
         enableLegacyTransitions={true}
         transitionDuration={500}
       />

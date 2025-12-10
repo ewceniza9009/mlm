@@ -5,6 +5,5 @@
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
-  background-color: #0d1117; /* Dark theme base */
-  color: #e6edf3;
+  @apply bg-gray-50 text-gray-900 dark:bg-slate-950 dark:text-gray-100 transition-colors duration-300;
 }

@@ -8,31 +8,19 @@ import {
   LogOut,
   Menu,
   X,
-  User
+  Users
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
 import { api } from '../store/api';
 import { RootState } from '../store';
-
-const SidebarLink = ({ to, icon: Icon, label, active }: { to: string, icon: any, label: string, active: boolean }) => (
-  <Link
-    to={to}
-    className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${active
-        ? 'bg-teal-600 text-white'
-        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-      }`}
-  >
-    <Icon size={20} />
-    <span className="font-medium">{label}</span>
-  </Link>
-);
+import { ThemeToggle } from './ThemeToggle';
 
 const DashboardLayout = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const dispatch = useDispatch();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.auth.user);
 
   const handleLogout = () => {
@@ -41,82 +29,121 @@ const DashboardLayout = () => {
     navigate('/login');
   };
 
+  const navItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+    { icon: Users, label: 'My Network', path: '/network' },
+    { icon: Wallet, label: 'Wallet', path: '/wallet' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
+  ];
+
   return (
-    <div className="flex h-screen bg-slate-900 text-white overflow-hidden font-sans">
+    <div className="flex h-screen bg-gray-50 dark:bg-[#0f1014] text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 border-r border-slate-700 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          } md:relative md:translate-x-0`}
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-[#1a1b23] border-r border-gray-200 dark:border-white/5 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } md:relative md:translate-x-0 flex flex-col shadow-2xl md:shadow-none`}
       >
-        <div className="flex items-center justify-between p-6 border-b border-slate-700">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-              <Network className="text-white w-5 h-5" />
+        {/* Sidebar Header */}
+        <div className="flex items-center justify-between p-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-teal-400 flex items-center justify-center shadow-lg shadow-teal-500/30">
+              <Network size={22} className="text-white" />
             </div>
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-cyan-400">
-              BinaryMLM
-            </span>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white leading-none">Binary<span className="text-teal-500">MLM</span></h1>
+              <p className="text-[10px] text-gray-400 dark:text-slate-500 uppercase tracking-widest font-semibold mt-1">Enterprise</p>
+            </div>
           </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-white">
+          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
             <X size={24} />
           </button>
         </div>
 
-        <nav className="p-4 space-y-2">
-          {user?.role === 'admin' ? (
-            <>
-              <SidebarLink to="/admin" icon={LayoutDashboard} label="Admin Overview" active={location.pathname === '/admin'} />
-              <SidebarLink to="/admin/commissions" icon={Wallet} label="Commission Run" active={location.pathname === '/admin/commissions'} />
-              {/* Fix 2: Added Wallet link for Admin */}
-              <SidebarLink to="/wallet" icon={Wallet} label="My Wallet" active={location.pathname === '/wallet'} />
-              <SidebarLink to="/settings" icon={Settings} label="Settings" active={location.pathname === '/settings'} />
-              <SidebarLink to="/" icon={User} label="Switch to User View" active={false} />
-            </>
-          ) : (
-            <>
-              <SidebarLink to="/" icon={LayoutDashboard} label="Dashboard" active={location.pathname === '/'} />
-              <SidebarLink to="/network" icon={Network} label="My Network" active={location.pathname === '/network'} />
-              <SidebarLink to="/wallet" icon={Wallet} label="Wallet" active={location.pathname === '/wallet'} />
-              <SidebarLink to="/settings" icon={Settings} label="Settings" active={location.pathname === '/settings'} />
-            </>
+        {/* Navigation */}
+        <nav className="px-4 space-y-2 flex-1 overflow-y-auto">
+          <p className="px-4 text-xs font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-2 mt-2">Menu</p>
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => {
+                navigate(item.path);
+                setIsSidebarOpen(false);
+              }}
+              className={`group w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 font-medium text-sm ${location.pathname === item.path
+                ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 shadow-sm'
+                : 'text-gray-600 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-slate-200'
+                }`}
+            >
+              <item.icon size={20} className={`${location.pathname === item.path ? 'text-teal-600 dark:text-teal-400' : 'text-gray-400 dark:text-slate-500 group-hover:text-gray-600 dark:group-hover:text-slate-300'}`} />
+              <span>{item.label}</span>
+              {location.pathname === item.path && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-teal-500 shadow-[0_0_8px_rgba(20,184,166,0.5)]"></div>
+              )}
+            </button>
+          ))}
+
+          {user?.role === 'admin' && (
+            <div className="mt-8">
+              <p className="px-4 text-xs font-semibold text-amber-500/80 uppercase tracking-wider mb-2">Administration</p>
+              <div className="bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/10 rounded-xl p-2 mx-2">
+                <button onClick={() => navigate('/admin')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-amber-100/70 hover:bg-amber-100 dark:hover:bg-amber-500/10 transition-colors">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                  System Overview
+                </button>
+                <button onClick={() => navigate('/admin/commissions')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 dark:text-amber-100/70 hover:bg-amber-100 dark:hover:bg-amber-500/10 transition-colors">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                  Run Commissions
+                </button>
+              </div>
+            </div>
           )}
         </nav>
 
-        <div className="absolute bottom-0 w-full p-4 border-t border-slate-700">
+        {/* User Profile Footer */}
+        <div className="p-4 mx-4 mb-4 bg-gray-100 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+              {user?.username?.substring(0, 2).toUpperCase()}
+            </div>
+            <div className="overflow-hidden flex-1">
+              <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user?.username}</p>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <p className="text-xs text-gray-500 dark:text-slate-400 truncate">Online</p>
+              </div>
+            </div>
+            <ThemeToggle />
+          </div>
+
           <button
             onClick={handleLogout}
-            className="flex items-center space-x-3 p-3 w-full rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+            className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 py-2 rounded-lg transition-all"
           >
-            <LogOut size={20} />
-            <span className="font-medium">Logout</span>
+            <LogOut size={14} />
+            Sign Out
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* Topbar */}
-        <header className="h-16 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-6">
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-400 hover:text-white md:hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+        {/* Mobile Header */}
+        <header className="h-16 bg-white dark:bg-[#1a1b23] border-b border-gray-200 dark:border-white/5 flex items-center justify-between px-6 md:hidden flex-shrink-0 z-40">
+          <button onClick={() => setIsSidebarOpen(true)} className="text-gray-500 dark:text-slate-400">
             <Menu size={24} />
           </button>
-
-          <div className="flex items-center space-x-4 ml-auto">
-            <div className="flex items-center space-x-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium text-white">{user?.username || 'User'}</p>
-                <p className="text-xs text-slate-400">{user?.email}</p>
-              </div>
-              <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center border border-slate-600">
-                <User className="text-teal-400 w-6 h-6" />
-              </div>
-            </div>
-          </div>
+          <span className="font-bold text-gray-900 dark:text-white">BinaryMLM</span>
+          <div className="w-8"></div>
         </header>
 
-        {/* Content Scrollable */}
-        <main className="flex-1 overflow-y-auto p-6 bg-slate-900">
-          <Outlet />
+        {/* Gradient Overlay for Main Content Area */}
+        <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-teal-500/5 to-transparent pointer-events-none z-0"></div>
+
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-auto p-4 md:p-8 relative z-10 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-700">
+          <div className="h-full flex flex-col">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

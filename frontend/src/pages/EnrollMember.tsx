@@ -88,25 +88,25 @@ const EnrollMember = () => {
     <div className="max-w-2xl mx-auto">
       <button
         onClick={() => navigate('/')}
-        className="flex items-center space-x-2 text-slate-400 hover:text-white mb-6 transition-colors"
+        className="flex items-center space-x-2 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft size={20} />
         <span>Back to Dashboard</span>
       </button>
 
-      <div className="bg-slate-800 p-8 rounded-xl border border-slate-700 shadow-xl">
+      <div className="bg-white dark:bg-slate-800 p-8 rounded-xl border border-gray-200 dark:border-slate-700 shadow-xl">
         <div className="flex items-center space-x-3 mb-8">
           <div className="w-12 h-12 bg-teal-500 rounded-lg flex items-center justify-center">
             <UserPlus className="text-white w-7 h-7" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Enroll New Member</h1>
-            <p className="text-slate-400">Add a new distributor directly to your downline</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Enroll New Member</h1>
+            <p className="text-gray-500 dark:text-slate-400">Add a new distributor directly to your downline</p>
           </div>
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-500/10 border border-red-500/50 p-4 rounded-lg flex items-center space-x-3 text-red-400">
+          <div className="mb-6 bg-red-100 dark:bg-red-500/10 border border-red-500/50 p-4 rounded-lg flex items-center space-x-3 text-red-700 dark:text-red-400">
             <AlertCircle size={20} />
             <span>{error}</span>
           </div>
@@ -115,26 +115,26 @@ const EnrollMember = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">New Username</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-slate-300">New Username</label>
               <input
                 type="text"
                 name="username"
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-teal-500 transition-colors"
+                className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg p-3 text-gray-900 dark:text-white focus:outline-none focus:border-teal-500 transition-colors"
                 placeholder="e.g. johndoe"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Email Address</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Email Address</label>
               <input
                 type="email"
                 name="email"
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-teal-500 transition-colors"
+                className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg p-3 text-gray-900 dark:text-white focus:outline-none focus:border-teal-500 transition-colors"
                 placeholder="john@example.com"
               />
             </div>
@@ -142,36 +142,36 @@ const EnrollMember = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Temporary Password</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Temporary Password</label>
               <input
                 type="text"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-teal-500 transition-colors"
+                className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg p-3 text-gray-900 dark:text-white focus:outline-none focus:border-teal-500 transition-colors"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300">Placement Strategy</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Placement Strategy</label>
               <select
                 name="position"
                 value={formData.position}
                 onChange={handleChange}
-                className="w-full bg-slate-900 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-teal-500 transition-colors"
+                className="w-full bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg p-3 text-gray-900 dark:text-white focus:outline-none focus:border-teal-500 transition-colors"
               >
                 <option value="left">Place on Left Leg</option>
                 <option value="right">Place on Right Leg</option>
                 <option value="auto">Auto-Balance (Weak Leg)</option>
               </select>
-              <p className="text-xs text-slate-500">Determines where they fall in the binary tree.</p>
+              <p className="text-xs text-gray-500 dark:text-slate-500">Determines where they fall in the binary tree.</p>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-700">
+          <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
             <div className="flex items-center justify-between">
               {/* Sponsor Input with Autocomplete */}
               <div className="flex items-center space-x-2 relative" ref={searchRef}>
-                <label className="text-sm font-medium text-slate-300">Sponsor:</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-slate-300">Sponsor:</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -185,12 +185,12 @@ const EnrollMember = () => {
                       if (formData.sponsorUsername) setShowDropdown(true);
                     }}
                     autoComplete="off"
-                    className="bg-slate-900 border border-slate-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-teal-500 w-40"
+                    className="bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded px-2 py-1 text-gray-900 dark:text-white text-sm focus:outline-none focus:border-teal-500 w-40"
                   />
 
                   {/* Suggestions Dropdown */}
                   {showDropdown && searchResults && searchResults.length > 0 && (
-                    <div className="absolute bottom-full left-0 w-64 bg-slate-800 border border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50 mb-1">
+                    <div className="absolute bottom-full left-0 w-64 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg shadow-xl max-h-48 overflow-y-auto z-50 mb-1">
                       {searchResults.map((user: any) => (
                         <button
                           key={user._id}
@@ -199,10 +199,10 @@ const EnrollMember = () => {
                             setFormData(prev => ({ ...prev, sponsorUsername: user.username }));
                             setShowDropdown(false);
                           }}
-                          className="w-full text-left px-3 py-2 hover:bg-slate-700 text-sm text-slate-300 flex justify-between items-center border-b border-slate-700 last:border-0"
+                          className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-slate-700 text-sm text-gray-700 dark:text-slate-300 flex justify-between items-center border-b border-gray-100 dark:border-slate-700 last:border-0"
                         >
-                          <span className="font-bold text-white">{user.username}</span>
-                          <span className="text-xs text-slate-500">{user.rank || 'Member'}</span>
+                          <span className="font-bold text-gray-900 dark:text-white">{user.username}</span>
+                          <span className="text-xs text-gray-500 dark:text-slate-500">{user.rank || 'Member'}</span>
                         </button>
                       ))}
                     </div>

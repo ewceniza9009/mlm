@@ -11,18 +11,21 @@ interface StatsCardProps {
 
 const StatsCard: React.FC<StatsCardProps> = ({ title, value, icon: Icon, trend, trendUp }) => {
   return (
-    <div className="bg-slate-800 p-6 rounded-lg shadow-md border border-slate-700 flex items-center justify-between">
+    <div className="bg-white dark:bg-[#1a1b23] p-6 rounded-2xl shadow-sm hover:shadow-lg dark:hover:shadow-teal-900/10 border border-gray-200 dark:border-white/5 flex items-center justify-between transition-all duration-300 transform hover:-translate-y-1 group">
       <div>
-        <p className="text-slate-400 text-sm font-medium">{title}</p>
-        <h3 className="text-2xl font-bold text-white mt-1">{value}</h3>
+        <p className="text-gray-500 dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">{title}</p>
+        <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-2 mb-1">{value}</h3>
         {trend && (
-          <p className={`text-sm mt-1 ${trendUp ? 'text-green-500' : 'text-red-500'}`}>
-            {trend}
-          </p>
+          <div className="flex items-center gap-1">
+            <span className={`text-xs font-medium ${trendUp ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              {trendUp ? '↑' : '↓'} {trend}
+            </span>
+            <span className="text-[10px] text-gray-400 dark:text-slate-500">vs last period</span>
+          </div>
         )}
       </div>
-      <div className="p-3 bg-slate-700 rounded-full">
-        <Icon className="text-teal-400 w-6 h-6" />
+      <div className="p-4 bg-teal-50 dark:bg-white/5 rounded-2xl group-hover:bg-teal-500 group-hover:text-white transition-colors duration-300">
+        <Icon className="text-teal-600 dark:text-teal-400 group-hover:text-white w-6 h-6 transition-colors" />
       </div>
     </div>
   );

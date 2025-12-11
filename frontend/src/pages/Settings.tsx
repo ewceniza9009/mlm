@@ -41,22 +41,40 @@ const Settings = () => {
   const [preference, setPreference] = useState('weaker_leg');
   const [enableHoldingTank, setEnableHoldingTank] = useState('system'); // Default to system
 
+  // Profile Edit State
+  const [isEditing, setIsEditing] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
   useEffect(() => {
     if (user) {
       if (user.spilloverPreference) setPreference(user.spilloverPreference);
       if (user.enableHoldingTank) setEnableHoldingTank(user.enableHoldingTank);
+      setEmail(user.email || '');
     }
   }, [user]);
 
   // Handlers
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password && password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
     try {
       await updateProfile({
         spilloverPreference: preference,
-        enableHoldingTank
+        enableHoldingTank,
+        email: isEditing ? email : undefined,
+        password: isEditing && password ? password : undefined
       }).unwrap();
+
       alert('Profile Updated');
+      setIsEditing(false);
+      setPassword('');
+      setConfirmPassword('');
     } catch (err) {
       alert('Error updating profile');
     }
@@ -94,27 +112,72 @@ const Settings = () => {
         <div className="lg:col-span-1 space-y-8">
           {/* PROFILE CARD */}
           <div className="bg-white dark:bg-slate-800 rounded-3xl border border-gray-100 dark:border-slate-700 p-4 md:p-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl">
-                {user?.username?.charAt(0).toUpperCase()}
+            <div className="flex items-center gap-4 mb-6 justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xl">
+                  {user?.username?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">{user?.username}</h3>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400 capitalize">
+                    {user?.role}
+                  </span>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{user?.username}</h3>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400 capitalize">
-                  {user?.role}
-                </span>
-              </div>
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="text-slate-400 hover:text-teal-500 transition-colors"
+              >
+                {isEditing ? 'Cancel' : 'Edit'}
+              </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs text-gray-400 font-bold uppercase tracking-wider">Email Address</label>
-                <div className="text-gray-700 dark:text-slate-300 font-medium">{user?.email}</div>
+                <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Email Address</label>
+                {isEditing ? (
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg p-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                  />
+                ) : (
+                  <div className="text-gray-700 dark:text-slate-300 font-medium">{user?.email}</div>
+                )}
               </div>
-              <div>
-                <label className="text-xs text-gray-400 font-bold uppercase tracking-wider">Member ID</label>
-                <div className="text-gray-700 dark:text-slate-300 font-medium font-mono text-sm">{user?.id}</div>
-              </div>
+
+              {isEditing && (
+                <>
+                  <div>
+                    <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">New Password (Optional)</label>
+                    <input
+                      type="password"
+                      placeholder="Leave blank to keep current"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg p-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Confirm Password</label>
+                    <input
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg p-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 outline-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              {!isEditing && (
+                <div>
+                  <label className="text-xs text-gray-400 font-bold uppercase tracking-wider block mb-1">Member ID</label>
+                  <div className="text-gray-700 dark:text-slate-300 font-medium font-mono text-sm">{user?.id}</div>
+                </div>
+              )}
             </div>
           </div>
 

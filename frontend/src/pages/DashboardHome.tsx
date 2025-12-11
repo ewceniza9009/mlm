@@ -68,9 +68,9 @@ const DashboardHome = () => {
             />
             <StatsCard
               title="Left/Right Vol"
-              value="0 / 0"
+              value={`${user?.currentLeftPV || 0} / ${user?.currentRightPV || 0}`}
               icon={Activity}
-              trend="Live (Mock)"
+              trend="Live"
               trendUp={true}
             />
             <StatsCard
@@ -92,11 +92,11 @@ const DashboardHome = () => {
                 </h3>
                 <span className="text-xs font-medium text-green-500 bg-green-50 dark:bg-green-500/10 px-2 py-1 rounded-full">+12.5% vs last week</span>
               </div>
-              <div className="h-[250px] w-full">
+              <div className="h-[250px] w-full min-w-0 relative overflow-hidden">
                 {earningsLoading ? (
                   <div className="h-full w-full flex items-center justify-center text-gray-400 dark:text-slate-500 animate-pulse">Loading Chart...</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="99%" height="100%">
                     <AreaChart data={earningsData || []}>
                       <defs>
                         <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
@@ -125,11 +125,11 @@ const DashboardHome = () => {
                   <Users size={18} className="text-indigo-500" /> Team Growth
                 </h3>
               </div>
-              <div className="h-[250px] w-full">
+              <div className="h-[250px] w-full min-w-0 relative overflow-hidden">
                 {growthLoading ? (
                   <div className="h-full w-full flex items-center justify-center text-gray-400 dark:text-slate-500 animate-pulse">Loading Chart...</div>
                 ) : (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="99%" height="100%">
                     <BarChart data={growthData || []}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" className="dark:stroke-slate-700" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />

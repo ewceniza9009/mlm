@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import Ticket from '../models/Ticket';
 import mongoose from 'mongoose';
+import { createNotification } from './notificationController';
 
 // Create a new ticket
 export const createTicket = async (req: AuthRequest, res: Response) => {
@@ -75,6 +76,21 @@ export const replyTicket = async (req: AuthRequest, res: Response) => {
         // For now, just update timestamp via save
 
         await ticket.save();
+
+        // Notify Recipient
+        if (sender === 'admin') {
+            // Notify User
+            await createNotification(
+                ticket.userId.toString(),
+                'info',
+                'Support Ticket Reply',
+                `Admin replied to ticket: ${ticket.subject}`
+            );
+        } else {
+            // Notify Admins? (Optional - ideally we would have an admin notification system)
+            // For now, let's keep it user-centric as per request.
+        }
+
         res.json(ticket);
     } catch (error) {
         console.error('Reply Ticket Error:', error);

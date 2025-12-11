@@ -3,6 +3,7 @@ import { AuthRequest } from '../middleware/authMiddleware';
 import User from '../models/User';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
+import { createNotification } from './notificationController';
 
 // --- KYC ---
 
@@ -58,7 +59,27 @@ export const updateKYCStatus = async (req: Request, res: Response) => {
         user.kycStatus = status;
         if (comment) user.kycComment = comment;
 
+
+
         await user.save();
+
+        // NOTIFY
+        if (status === 'approved') {
+            await createNotification(
+                userId,
+                'success',
+                'KYC Verified',
+                'Your identity verification documents have been approved.'
+            );
+        } else {
+            await createNotification(
+                userId,
+                'error',
+                'KYC Rejected',
+                `Your identity verification was rejected. Reason: ${comment || 'Documents invalid'}`
+            );
+        }
+
         res.json({ message: `KYC ${status}` });
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });

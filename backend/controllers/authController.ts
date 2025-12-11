@@ -8,6 +8,7 @@ import SystemConfig from '../models/SystemConfig';
 import spilloverService from '../services/spilloverService';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { createNotification } from './notificationController';
 
 // Register Logic
 export const register = async (req: Request, res: Response) => {
@@ -94,6 +95,25 @@ export const register = async (req: Request, res: Response) => {
     // Init Wallet & Commission
     await new Wallet({ userId: savedUser._id }).save();
     await new Commission({ userId: savedUser._id }).save();
+
+    // Trigger Notifications
+    // 1. Notify New User
+    await createNotification(
+      savedUser._id.toString(),
+      'success',
+      'Welcome to GenMatrix!',
+      `You have successfully enrolled with the ${packageName || 'Starter'} package.`
+    );
+
+    // 2. Notify Sponsor
+    if (sponsor) {
+      await createNotification(
+        sponsor._id.toString(),
+        'info',
+        'New Team Member Enrolled',
+        `${savedUser.username} has joined your downline.`
+      );
+    }
 
     res.status(201).json({ message: 'User registered', userId: savedUser._id });
 

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Wallet from '../models/Wallet';
 import { AuthRequest } from '../middleware/authMiddleware';
+import { createNotification } from './notificationController';
 
 export const getMyWallet = async (req: AuthRequest, res: Response) => {
   try {
@@ -200,6 +201,24 @@ export const processWithdrawal = async (req: Request, res: Response) => {
     }
 
     await wallet.save();
+
+    // NOTIFY
+    if (action === 'APPROVE') {
+      await createNotification(
+        userId,
+        'success',
+        'Withdrawal Approved',
+        `Your withdrawal request for $${Math.abs(tx.amount).toFixed(2)} has been processed.`
+      );
+    } else {
+      await createNotification(
+        userId,
+        'error',
+        'Withdrawal Rejected',
+        `Your withdrawal request for $${Math.abs(tx.amount).toFixed(2)} was rejected. Funds have been returned to your wallet.`
+      );
+    }
+
     res.json({ message: `Withdrawal ${action.toLowerCase()}d` });
 
   } catch (error) {

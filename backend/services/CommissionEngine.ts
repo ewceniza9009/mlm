@@ -2,6 +2,7 @@ import User, { IUser } from '../models/User';
 import Wallet from '../models/Wallet';
 import Commission from '../models/Commission';
 import SystemConfig from '../models/SystemConfig';
+import { createNotification } from '../controllers/notificationController';
 
 export class CommissionEngine {
 
@@ -44,6 +45,16 @@ export class CommissionEngine {
       details: 'Direct Referral Signup'
     });
     await commission.save();
+
+    await commission.save();
+
+    // NOTIFY
+    await createNotification(
+      sponsor._id.toString(),
+      'success',
+      'Direct Referral Commission',
+      `You earned $${bonusAmount.toFixed(2)} for referring a new member!`
+    );
 
     console.log(`[CommissionEngine] Referral Bonus: $${bonusAmount} to ${sponsor.username}`);
   }
@@ -136,6 +147,14 @@ export class CommissionEngine {
       // --- CHECK RANK ADVANCEMENT ---
       await this.checkRankAdvancement(user);
 
+      // NOTIFY
+      await createNotification(
+        user._id.toString(),
+        'success',
+        'Binary Commission',
+        `You matched ${pairs} pair(s) and earned $${payout.toFixed(2)}!`
+      );
+
       console.log(`[CommissionEngine] User ${user.username}: Matched ${pairs} pairs (${RATIO}). Payout $${payout}.`);
     }
   }
@@ -169,6 +188,14 @@ export class CommissionEngine {
           `Matching bonus (${(generations[currentLevel] * 100)}%) from ${currentUser.username}'s binary income`
         );
         await this.updateCommissionStats(sponsor._id.toString(), bonusAmount, 'MATCHING_BONUS');
+
+        // NOTIFY
+        await createNotification(
+          sponsor._id.toString(),
+          'success',
+          'Matching Bonus',
+          `You earned a $${bonusAmount.toFixed(2)} matching bonus from your downline.`
+        );
       }
 
       currentUser = sponsor;
@@ -197,6 +224,14 @@ export class CommissionEngine {
       const rankBonus = newRank === 'Silver' ? 50 : newRank === 'Gold' ? 200 : 1000;
       await this.creditWallet(user._id.toString(), rankBonus, 'RANK_ACHIEVEMENT', `Promoted to ${newRank}`);
       await this.updateCommissionStats(user._id.toString(), rankBonus, 'RANK_ACHIEVEMENT');
+
+      // NOTIFY
+      await createNotification(
+        user._id.toString(),
+        'success',
+        'Rank Advanced!',
+        `Congratulations! You have been promoted to ${newRank} and received a $${rankBonus} bonus.`
+      );
     }
   }
 

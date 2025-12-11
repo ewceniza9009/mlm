@@ -44,3 +44,6 @@ Thumbs.db
 # Optional: Ignore specific seed/debug scripts if they contain sensitive test data
 # backend/scripts/seed-data.ts
 # backend/scripts/force-pv.ts
+
+# Documentation (Local Only)
+GenMatrix_Documentation.md

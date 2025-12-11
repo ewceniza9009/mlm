@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Wallet,
@@ -14,6 +14,7 @@ import { logout } from '../store/authSlice';
 import { api } from '../store/api';
 import { RootState } from '../store';
 import { ThemeToggle } from './ThemeToggle';
+import NotificationCenter from './NotificationCenter';
 
 const DashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -115,7 +116,6 @@ const DashboardLayout = () => {
                 <p className="text-xs text-gray-500 dark:text-slate-400 truncate">Online</p>
               </div>
             </div>
-            <ThemeToggle />
           </div>
 
           <button
@@ -131,12 +131,20 @@ const DashboardLayout = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         {/* Mobile Header */}
-        <header className="h-16 bg-white dark:bg-[#1a1b23] border-b border-gray-200 dark:border-white/5 flex items-center justify-between px-6 md:hidden flex-shrink-0 z-40">
-          <button onClick={() => setIsSidebarOpen(true)} className="text-gray-500 dark:text-slate-400">
-            <Menu size={24} />
-          </button>
-          <span className="font-bold text-gray-900 dark:text-white">GenMatrix</span>
-          <div className="w-8"></div>
+        {/* Unified Header */}
+        <header className="h-16 bg-white/80 dark:bg-[#1a1b23]/80 backdrop-blur-md border-b border-gray-200 dark:border-white/5 flex items-center justify-between px-4 md:px-8 flex-shrink-0 z-40 sticky top-0">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-white/5 p-2 rounded-lg transition-colors">
+              <Menu size={20} />
+            </button>
+            <span className="font-bold text-lg text-gray-900 dark:text-white md:hidden">GenMatrix</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-1"></div>
+            <NotificationCenter />
+          </div>
         </header>
 
         {/* Gradient Overlay for Main Content Area */}

@@ -139,6 +139,12 @@ export const api = createApi({
     searchDownline: builder.query<any[], string>({
       query: (query) => `network/search-downline?query=${query}`,
     }),
+    getEarningsAnalytics: builder.query({
+      query: () => 'analytics/earnings',
+    }),
+    getGrowthAnalytics: builder.query({
+      query: () => 'analytics/growth',
+    }),
   }),
 });
 
@@ -161,5 +167,7 @@ export const {
   useGetPackagesQuery,
   useCreatePackageMutation,
   useUpdatePackageMutation,
-  useDeletePackageMutation
+  useDeletePackageMutation,
+  useGetEarningsAnalyticsQuery,
+  useGetGrowthAnalyticsQuery
 } = api;

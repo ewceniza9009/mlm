@@ -41,8 +41,11 @@ app.get('/', (req, res) => {
   res.send('MLM Backend API Running (TS)');
 });
 
+import analyticsRoutes from './routes/analyticsRoutes';
+
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/network', genealogyRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/packages', packageRoutes);
 app.use('/api/v1/wallet', walletRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);

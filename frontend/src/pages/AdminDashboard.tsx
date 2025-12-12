@@ -2,8 +2,11 @@ import { useState } from 'react';
 import StatsCard from '../components/StatsCard';
 import { DollarSign, Users, PlayCircle, Activity, AlertCircle, CheckCircle, Info, ArrowUpDown } from 'lucide-react';
 import { useRunCommissionsMutation, useGetSystemLogsQuery, useGetAdminStatsQuery } from '../store/api';
+import { useUI } from '../components/UIContext';
 
 const AdminDashboard = () => {
+  const { showConfirm, showAlert } = useUI();
+
   const [runCommissions, { isLoading: processing }] = useRunCommissionsMutation();
   const { data: statsData, isLoading: statsLoading } = useGetAdminStatsQuery(undefined, { pollingInterval: 30000 });
 
@@ -27,14 +30,26 @@ const AdminDashboard = () => {
 
   const [lastRun, setLastRun] = useState<string | null>(null);
 
-  const handleRunCommissions = async () => {
-    try {
-      const res = await runCommissions({}).unwrap();
-      setLastRun(`Completed at ${new Date().toLocaleTimeString()} - ${res.usersProcessed} users processed.`);
-    } catch (err: any) {
-      console.error(err);
-      setLastRun(`Failed: ${err.data?.message || 'Unknown error'}`);
-    }
+  const handleRunCommissions = () => {
+    showConfirm({
+      title: 'Run Payout Cycle?',
+      message: 'This will process commissions for all eligible users. Are you sure you want to proceed?',
+      confirmText: 'Yes, Run Payouts',
+      type: 'info',
+      onConfirm: async () => {
+        try {
+          const res = await runCommissions({}).unwrap();
+          const msg = `Completed: ${res.usersProcessed} users processed.`;
+          setLastRun(msg);
+          showAlert(msg, 'success');
+        } catch (err: any) {
+          console.error(err);
+          const errorMsg = err.data?.message || 'Payout Failed';
+          setLastRun(`Failed: ${errorMsg}`);
+          showAlert(errorMsg, 'error');
+        }
+      }
+    });
   };
 
   const handleExportCSV = () => {

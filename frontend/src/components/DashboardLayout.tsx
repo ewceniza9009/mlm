@@ -115,7 +115,18 @@ const DashboardLayout = () => {
 
           {user?.role === 'admin' && (
             <div className="mt-8 space-y-4">
-              <p className="px-4 text-xs font-semibold text-amber-500/80 uppercase tracking-wider">Administration</p>
+              <div className="flex items-center justify-between px-4">
+                <p className="text-xs font-semibold text-amber-500/80 uppercase tracking-wider">Administration</p>
+                <button
+                  onClick={() => setExpandedGroups(prev => {
+                    const allCollapsed = Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {});
+                    return allCollapsed;
+                  })}
+                  className="text-[10px] text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors uppercase font-medium tracking-wider"
+                >
+                  Collapse All
+                </button>
+              </div>
 
               {/* Admin Groups */}
               <div className="space-y-1 mx-2">

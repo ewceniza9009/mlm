@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import TreeVisualizer from '../components/TreeVisualizer';
 import HoldingTank from '../components/HoldingTank';
 import NetworkNodeModal from '../components/NetworkNodeModal'; // Import
-import { Search, Filter, ZoomIn, ZoomOut, Download, List } from 'lucide-react';
-import { useLazySearchDownlineQuery, useGetTreeQuery } from '../store/api';
+import { Search, Filter, ZoomIn, ZoomOut, Download, List, ArrowUp, ArrowDown } from 'lucide-react';
+import { useLazySearchDownlineQuery, useGetTreeQuery, useGetUplineQuery } from '../store/api';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 
@@ -15,9 +15,27 @@ const Network = () => {
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
   const [viewingMemberId, setViewingMemberId] = useState<string | null>(null);
 
-  // Fetch Tree Data logic moved here
+  // View Mode State
+  const [viewMode, setViewMode] = useState<'downline' | 'upline'>('downline');
+  const [uplineLevels, setUplineLevels] = useState<number>(5);
+
+  // Fetch Tree Data logic
   const rootId = focusedNodeId || user?.id;
-  const { data: treeData, isLoading: isTreeLoading, error: treeError } = useGetTreeQuery(rootId);
+
+  const { data: downlineData, isLoading: isDownlineLoading, error: downlineError } = useGetTreeQuery(rootId, {
+    skip: viewMode === 'upline'
+  });
+
+  const { data: uplineData, isLoading: isUplineLoading, error: uplineError } = useGetUplineQuery({
+    userId: rootId,
+    levels: uplineLevels
+  }, {
+    skip: viewMode === 'downline' || !rootId
+  });
+
+  const treeData = viewMode === 'downline' ? downlineData : uplineData;
+  const isTreeLoading = viewMode === 'downline' ? isDownlineLoading : isUplineLoading;
+  const treeError = viewMode === 'downline' ? downlineError : uplineError;
 
   const handleExport = () => {
     if (!treeData) return;
@@ -62,6 +80,45 @@ const Network = () => {
             <List size={18} />
             <span className="text-sm font-medium">Holding Tank</span>
           </button>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center gap-1 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-1">
+            <button
+              onClick={() => setViewMode('downline')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'downline'
+                  ? 'bg-teal-50 text-teal-600 dark:bg-teal-500/20 dark:text-teal-400 shadow-sm'
+                  : 'text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700'
+                }`}
+            >
+              <ArrowDown size={14} />
+              Downline
+            </button>
+            <button
+              onClick={() => setViewMode('upline')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'upline'
+                  ? 'bg-purple-50 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 shadow-sm'
+                  : 'text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700'
+                }`}
+            >
+              <ArrowUp size={14} />
+              Upline
+            </button>
+          </div>
+
+          {/* Upline Level Selector */}
+          {viewMode === 'upline' && (
+            <select
+              value={uplineLevels}
+              onChange={(e) => setUplineLevels(Number(e.target.value))}
+              className="bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-purple-500"
+            >
+              <option value={1}>1 Level Up</option>
+              <option value={2}>2 Levels Up</option>
+              <option value={3}>3 Levels Up</option>
+              <option value={4}>4 Levels Up</option>
+              <option value={5}>5 Levels Up</option>
+            </select>
+          )}
 
           {/* Search Input */}
           <div className="relative flex-grow md:flex-grow-0 group">

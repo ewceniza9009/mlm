@@ -20,7 +20,7 @@ export const api = createApi({
       providesTags: ['Tree'],
     }),
     getUpline: builder.query({
-      query: (userId) => `network/upline?userId=${userId}`,
+      query: ({ userId, levels }) => `network/upline?userId=${userId}&levels=${levels || 5}`,
     }),
     getMemberDetails: builder.query({
       query: (memberId) => `network/member/${memberId}`,

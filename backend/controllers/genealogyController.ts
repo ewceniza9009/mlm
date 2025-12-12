@@ -83,18 +83,131 @@ const buildTree = async (node: IUser, depth: number): Promise<TreeNode | null> =
 
 export const getUpline = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.query;
+    const { userId, levels } = req.query;
     if (!userId) return res.status(400).json({ message: 'User ID required' });
 
-    const user = await User.findById(userId).populate('sponsorId', 'username email rank');
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const targetUser = await User.findById(userId);
+    if (!targetUser) return res.status(404).json({ message: 'User not found' });
 
-    res.json({
-      sponsor: user.sponsorId // This will be null if they are Root
-    });
+    // Parse path to find ancestors
+    // Path format: ,rootId,ancestorId,parentId,userId,
+    // We split by ',' and filter empty strings
+    const pathIds = (targetUser.path || '').split(',').filter(id => id && id.trim().length > 0);
+
+    // Determine how many levels to go up
+    const depth = parseInt(levels as string) || 5;
+
+    let selectedAncestorIds: string[] = [];
+
+    // STRATEGY 1: Use Path if available
+    // Check if we have enough ancestors in path (more than just self)
+    if (pathIds.length > 1) {
+      // Path includes self at end usually
+      const ancestorIds = pathIds.slice(0, -1);
+      selectedAncestorIds = ancestorIds.slice(-depth);
+    }
+
+    // STRATEGY 2: Fallback to manual crawl if path is empty/broken but parent exists
+    // (Only if we didn't find enough ancestors via path and parentId is present)
+    if (selectedAncestorIds.length === 0 && targetUser.parentId) {
+      console.log('[getUpline] Fallback Strategy Triggered');
+      let current: IUser | null = targetUser;
+      const foundAncestors: string[] = [];
+
+      // Crawl up manually
+      for (let i = 0; i < depth; i++) {
+        // console.log(`[getUpline] Crawl step ${i}, current: ${current?._id}, parentId: ${current?.parentId}`);
+        if (!current || !current.parentId) break;
+
+        try {
+          const parent: IUser | null = await User.findById(current.parentId);
+          if (parent) {
+            console.log(`[getUpline] Found parent: ${parent.username} (${parent._id})`);
+            foundAncestors.unshift(parent._id.toString());
+            current = parent;
+          } else {
+            console.log('[getUpline] Parent ID exists but user not found');
+            break;
+          }
+        } catch (e) {
+          console.error('[getUpline] Error finding parent:', e);
+          break;
+        }
+      }
+      selectedAncestorIds = foundAncestors;
+      console.log(`[getUpline] Final Manual Ancestors: ${selectedAncestorIds.join(', ')}`);
+    }
+
+    // If still no ancestors (e.g. root), just return the user themselves
+    if (selectedAncestorIds.length === 0) {
+      const tree = await buildUplineNode(targetUser, null);
+      return res.json(tree);
+    }
+
+    // Fetch all involved users (ancestors + target)
+    const allIds = [...selectedAncestorIds, targetUser._id];
+    const users = await User.find({ _id: { $in: allIds } });
+    const userMap = new Map(users.map(u => [u._id.toString(), u]));
+
+    // Construct the linear chain
+    // The first one in selectedAncestorIds is the top-most visible ancestor
+    const rootAncestorId = selectedAncestorIds[0];
+    const rootAncestor = userMap.get(rootAncestorId.toString());
+
+    if (!rootAncestor) {
+      // Fallback
+      return res.json(await buildUplineNode(targetUser, null));
+    }
+
+    // Build the chain
+    const buildChain = async (index: number): Promise<TreeNode> => {
+      const currentId = selectedAncestorIds[index];
+      const currentUser = userMap.get(currentId.toString());
+
+      if (!currentUser) return null as any;
+
+      const node = await buildUplineNode(currentUser);
+
+      // If there is a next ancestor
+      if (index + 1 < selectedAncestorIds.length) {
+        const childNode = await buildChain(index + 1);
+        if (childNode) node.children.push(childNode);
+      } else {
+        // The next one is the target user
+        const targetNode = await buildUplineNode(targetUser);
+        node.children.push(targetNode);
+      }
+
+      return node;
+    };
+
+    const tree = await buildChain(0);
+    res.json(tree);
+
   } catch (err) {
+    console.error('Upline Error:', err);
     res.status(500).json({ message: 'Server error retrieving upline' });
   }
+};
+
+// Helper for Upline Nodes (similar to buildTree but non-recursive fetching)
+const buildUplineNode = async (user: IUser, childNode?: TreeNode | null): Promise<TreeNode> => {
+  // Fetch Commission Data
+  const commission = await Commission.findOne({ userId: user._id });
+
+  const node: TreeNode = {
+    name: user.username,
+    attributes: {
+      id: user._id as Types.ObjectId,
+      rank: user.rank,
+      active: user.isActive,
+      leftPV: user.currentLeftPV || 0,
+      rightPV: user.currentRightPV || 0,
+      totalEarned: commission ? commission.totalEarned : 0
+    },
+    children: childNode ? [childNode] : []
+  };
+  return node;
 };
 
 // Search Downline

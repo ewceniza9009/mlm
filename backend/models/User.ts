@@ -117,7 +117,11 @@ const userSchema = new Schema<IUser>({
 // Pre-save hook for path/level updates
 userSchema.pre('save', async function (next) {
   const doc = this as any;
-  if (doc.isNew && doc.parentId) {
+
+  // Check if we need to update path:
+  // 1. New doc with parentId
+  // 2. Existing doc where parentId was modified/set
+  if ((doc.isNew || doc.isModified('parentId')) && doc.parentId) {
     try {
       // Need to cast constructor to Model to access findById
       const User = doc.constructor as mongoose.Model<IUser>;
@@ -129,8 +133,8 @@ userSchema.pre('save', async function (next) {
     } catch (error) {
       return next(error as Error);
     }
-  } else if (doc.isNew && !doc.parentId) {
-    // Root node handling
+  } else if ((doc.isNew || doc.isModified('parentId')) && !doc.parentId) {
+    // Root node handling (or reset to root if parent removed)
     doc.path = `,${doc._id},`;
     doc.level = 0;
   }

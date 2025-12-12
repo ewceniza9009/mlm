@@ -3,8 +3,14 @@ import Order from '../models/Order';
 import Product from '../models/Product';
 import Wallet from '../models/Wallet';
 import User from '../models/User';
-import SystemConfig from '../models/SystemConfig';
+import SystemSetting from '../models/SystemSetting';
 import { CommissionEngine } from '../services/CommissionEngine';
+
+// Helper to get setting (Duplicated from productController - potentially extract to service later)
+const getSetting = async (key: string): Promise<boolean> => {
+    const setting = await SystemSetting.findOne({ key });
+    return setting ? setting.value === true : false;
+};
 
 // Create Order (Members & Guests)
 export const createOrder = async (req: Request, res: Response) => {
@@ -14,14 +20,15 @@ export const createOrder = async (req: Request, res: Response) => {
 
         const isGuest = !userId;
 
-        // 1. Get System Config
-        const config = await (SystemConfig as any).getLatest();
+        // 1. Get System Settings
+        const enableShop = await getSetting('enableShop');
+        const enablePublicShop = await getSetting('enablePublicShop');
 
         // Gatekeeping
-        if (isGuest && !config.enablePublicShop) {
+        if (isGuest && !enablePublicShop) {
             return res.status(403).json({ message: 'Public Shop is disabled' });
         }
-        if (!isGuest && !config.enableShop) {
+        if (!isGuest && !enableShop) {
             return res.status(403).json({ message: 'Member Shop is disabled' });
         }
 

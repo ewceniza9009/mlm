@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IWalletTransaction {
-  type: 'DEPOSIT' | 'WITHDRAWAL' | 'COMMISSION' | 'TRANSFER_IN' | 'TRANSFER_OUT';
+  type: 'DEPOSIT' | 'WITHDRAWAL' | 'COMMISSION' | 'TRANSFER_IN' | 'TRANSFER_OUT' | 'PURCHASE' | 'BONUS';
   amount: number;
   date: Date;
   description?: string;
@@ -20,7 +20,7 @@ const walletSchema = new Schema<IWallet>({
   balance: { type: Number, default: 0 },
   currency: { type: String, default: 'USD' },
   transactions: [{
-    type: { type: String, enum: ['DEPOSIT', 'WITHDRAWAL', 'COMMISSION', 'TRANSFER_IN', 'TRANSFER_OUT'] },
+    type: { type: String, enum: ['DEPOSIT', 'WITHDRAWAL', 'COMMISSION', 'TRANSFER_IN', 'TRANSFER_OUT', 'PURCHASE', 'BONUS'] },
     amount: { type: Number },
     date: { type: Date, default: Date.now },
     description: { type: String },

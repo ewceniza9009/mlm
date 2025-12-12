@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useGetWalletQuery, useRequestWithdrawalMutation } from '../store/api';
 import { Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, Search, Download, ChevronLeft, ChevronRight, ArrowUpDown, Info, CreditCard } from 'lucide-react';
 
+import { useUI } from '../components/UIContext';
+
 const WalletPage = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -12,6 +14,7 @@ const WalletPage = () => {
   const { data: wallet, isLoading } = useGetWalletQuery({ page, limit, search, sortBy, order });
   const [requestWithdrawal, { isLoading: isWithdrawing }] = useRequestWithdrawalMutation();
   const [amount, setAmount] = useState('');
+  const { showAlert } = useUI();
 
   const transactions = wallet?.transactions?.data || [];
   const totalPages = wallet?.transactions?.totalPages || 1;
@@ -31,9 +34,9 @@ const WalletPage = () => {
     try {
       await requestWithdrawal({ amount: Number(amount), method: 'Bank Transfer', details: 'Default Bank' }).unwrap();
       setAmount('');
-      alert('Withdrawal requested!');
+      showAlert('Withdrawal requested successfully!', 'success');
     } catch (err: any) {
-      alert(err.data?.message || 'Failed');
+      showAlert(err.data?.message || 'Withdrawal Failed', 'error');
     }
   };
 
@@ -165,35 +168,39 @@ const WalletPage = () => {
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-slate-700/50">
               {transactions.length > 0 ? (
-                transactions.map((tx: any) => (
-                  <tr key={tx._id} className="hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
-                    <td className="px-6 py-3 flex items-center gap-2">
-                      <span className={`p-1.5 rounded-full ${tx.type === 'COMMISSION' || tx.type === 'DEPOSIT'
-                        ? 'bg-green-100 dark:bg-green-500/20 text-green-600'
-                        : 'bg-red-100 dark:bg-red-500/20 text-red-600'
-                        }`}>
-                        {tx.type === 'COMMISSION' && <ArrowDownLeft size={14} />}
-                        {tx.type === 'DEPOSIT' && <ArrowDownLeft size={14} />}
-                        {tx.type === 'WITHDRAWAL' && <ArrowUpRight size={14} />}
-                      </span>
-                      <span className="capitalize font-medium text-sm">{tx.type.replace('_', ' ').toLowerCase()}</span>
-                    </td>
-                    <td className={`px-6 py-3 font-mono font-bold text-sm ${tx.amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-3 text-sm max-w-xs truncate" title={tx.description}>{tx.description}</td>
-                    <td className="px-6 py-3 text-sm text-gray-500 dark:text-slate-500">
-                      {new Date(tx.date).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${tx.status === 'COMPLETED' ? 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' :
-                        tx.status === 'PENDING' ? 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
-                        }`}>
-                        {tx.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+                transactions.map((tx: any) => {
+                  const isCredit = ['DEPOSIT', 'COMMISSION', 'TRANSFER_IN', 'BONUS'].includes(tx.type);
+                  const isDebit = ['WITHDRAWAL', 'PURCHASE', 'TRANSFER_OUT'].includes(tx.type);
+
+                  return (
+                    <tr key={tx._id} className="hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
+                      <td className="px-6 py-3 flex items-center gap-2">
+                        <span className={`p-1.5 rounded-full ${isCredit
+                          ? 'bg-green-100 dark:bg-green-500/20 text-green-600'
+                          : 'bg-red-100 dark:bg-red-500/20 text-red-600'
+                          }`}>
+                          {isCredit && <ArrowDownLeft size={14} />}
+                          {isDebit && <ArrowUpRight size={14} />}
+                        </span>
+                        <span className="capitalize font-medium text-sm">{tx.type.replace('_', ' ').toLowerCase()}</span>
+                      </td>
+                      <td className={`px-6 py-3 font-mono font-bold text-sm ${isCredit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {isCredit ? '+' : '-'}{Math.abs(tx.amount).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-3 text-sm max-w-xs truncate" title={tx.description}>{tx.description}</td>
+                      <td className="px-6 py-3 text-sm text-gray-500 dark:text-slate-500">
+                        {new Date(tx.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${tx.status === 'COMPLETED' ? 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' :
+                          tx.status === 'PENDING' ? 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
+                          }`}>
+                          {tx.status}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })
               ) : (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-slate-500">
@@ -207,42 +214,46 @@ const WalletPage = () => {
           {/* Mobile Card View */}
           <div className="md:hidden divide-y divide-gray-100 dark:divide-slate-700">
             {transactions.length > 0 ? (
-              transactions.map((tx: any) => (
-                <div key={tx._id} className="p-4 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${tx.type === 'COMMISSION' || tx.type === 'DEPOSIT'
-                        ? 'bg-green-100 dark:bg-green-500/20 text-green-600'
-                        : 'bg-red-100 dark:bg-red-500/20 text-red-600'
-                        }`}>
-                        {tx.type === 'COMMISSION' && <ArrowDownLeft size={16} />}
-                        {tx.type === 'DEPOSIT' && <ArrowDownLeft size={16} />}
-                        {tx.type === 'WITHDRAWAL' && <ArrowUpRight size={16} />}
-                      </div>
-                      <div>
-                        <div className="font-bold text-sm text-gray-900 dark:text-white capitalize">
-                          {tx.type.replace('_', ' ').toLowerCase()}
-                        </div>
-                        <div className="text-xs text-gray-400 dark:text-slate-500">
-                          {new Date(tx.date).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className={`font-mono font-bold text-sm ${tx.amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}
-                    </div>
-                  </div>
+              transactions.map((tx: any) => {
+                const isCredit = ['DEPOSIT', 'COMMISSION', 'TRANSFER_IN', 'BONUS'].includes(tx.type);
+                const isDebit = ['WITHDRAWAL', 'PURCHASE', 'TRANSFER_OUT'].includes(tx.type);
 
-                  <div className="pl-11">
-                    <p className="text-xs text-gray-600 dark:text-slate-300 mb-2 line-clamp-2">{tx.description}</p>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${tx.status === 'COMPLETED' ? 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' :
-                      tx.status === 'PENDING' ? 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
-                      }`}>
-                      {tx.status}
-                    </span>
+                return (
+                  <div key={tx._id} className="p-4 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-full ${isCredit
+                          ? 'bg-green-100 dark:bg-green-500/20 text-green-600'
+                          : 'bg-red-100 dark:bg-red-500/20 text-red-600'
+                          }`}>
+                          {isCredit && <ArrowDownLeft size={16} />}
+                          {isDebit && <ArrowUpRight size={16} />}
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm text-gray-900 dark:text-white capitalize">
+                            {tx.type.replace('_', ' ').toLowerCase()}
+                          </div>
+                          <div className="text-xs text-gray-400 dark:text-slate-500">
+                            {new Date(tx.date).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`font-mono font-bold text-sm ${isCredit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {isCredit ? '+' : '-'}{Math.abs(tx.amount).toFixed(2)}
+                      </div>
+                    </div>
+
+                    <div className="pl-11">
+                      <p className="text-xs text-gray-600 dark:text-slate-300 mb-2 line-clamp-2">{tx.description}</p>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${tx.status === 'COMPLETED' ? 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' :
+                        tx.status === 'PENDING' ? 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
+                        }`}>
+                        {tx.status}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))
+                )
+              })
             ) : (
               <div className="p-8 text-center text-gray-500 dark:text-slate-500 text-sm">
                 No transactions found.

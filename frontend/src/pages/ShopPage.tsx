@@ -3,22 +3,32 @@ import { ShoppingBag, Search } from 'lucide-react';
 import { useGetShopProductsQuery, useCreateOrderMutation } from '../store/api';
 import { motion } from 'framer-motion';
 
+import { useUI } from '../components/UIContext';
+
 const ShopPage = () => {
     const { data: products, isLoading } = useGetShopProductsQuery({});
     const [createOrder, { isLoading: isOrdering }] = useCreateOrderMutation();
     const [searchTerm, setSearchTerm] = useState('');
+    const { showAlert, showConfirm } = useUI();
 
-    const handleBuy = async (product: any) => {
-        if (!confirm(`Buy ${product.name} for $${product.price}?`)) return;
-
-        try {
-            await createOrder({
-                items: [{ productId: product._id, quantity: 1 }]
-            }).unwrap();
-            alert('Purchase Successful! PV Added.');
-        } catch (err: any) {
-            alert(err.data?.message || 'Purchase Failed');
-        }
+    const handleBuy = (product: any) => {
+        showConfirm({
+            title: 'Confirm Purchase',
+            message: `Are you sure you want to buy ${product.name} for $${product.price}?`,
+            confirmText: 'Buy Now',
+            cancelText: 'Cancel',
+            type: 'info',
+            onConfirm: async () => {
+                try {
+                    await createOrder({
+                        items: [{ productId: product._id, quantity: 1 }]
+                    }).unwrap();
+                    showAlert('Purchase Successful! PV Added.', 'success');
+                } catch (err: any) {
+                    showAlert(err.data?.message || 'Purchase Failed', 'error');
+                }
+            }
+        });
     };
 
     const filteredProducts = products?.filter((p: any) =>

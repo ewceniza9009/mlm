@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { useGetAdminCommissionsQuery } from '../store/api';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { useUI } from '../components/UIContext';
 import { Download, AlertCircle, ChevronLeft, ChevronRight, Search, ArrowUpDown } from 'lucide-react';
 
 const AdminCommissions = () => {
+    const { token } = useSelector((state: RootState) => state.auth);
+    const { showAlert } = useUI();
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const [sortBy, setSortBy] = useState('date');
@@ -25,7 +30,7 @@ const AdminCommissions = () => {
         }
     };
 
-    const handleExportCSV = () => {
+    const handleExportCSV = async () => {
         const params = new URLSearchParams({
             format: 'csv',
             search,
@@ -33,7 +38,35 @@ const AdminCommissions = () => {
             order
         });
         const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1/';
-        window.location.href = `${baseUrl}admin/commissions?${params.toString()}`;
+        const url = `${baseUrl}admin/commissions?${params.toString()}`;
+
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Export failed');
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `commissions_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(downloadUrl);
+            document.body.removeChild(a);
+
+            showAlert('Export downloaded successfully', 'success');
+        } catch (err: any) {
+            console.error('Export Error:', err);
+            showAlert(err.message || 'Failed to export CSV', 'error');
+        }
     };
 
     if (isLoading) return <div className="text-gray-500 dark:text-gray-300 p-6">Loading commission history...</div>;

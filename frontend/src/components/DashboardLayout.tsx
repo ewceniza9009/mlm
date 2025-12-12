@@ -60,7 +60,12 @@ const DashboardLayout = () => {
     ...(shopStatus?.enableShop ? [{ icon: ShoppingBag, label: 'Shop', path: '/shop' }] : []),
     { icon: MessageSquare, label: 'Support', path: '/support' },
     { icon: Settings, label: 'Settings', path: '/settings' },
-  ];
+  ].filter(item => {
+    if (user?.status === 'pending_payment') {
+      return ['/shop', '/wallet'].includes(item.path);
+    }
+    return true;
+  });
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-[#0f1014] text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans overflow-hidden">

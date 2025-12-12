@@ -5,6 +5,7 @@ import Wallet from '../models/Wallet';
 import User from '../models/User';
 import SystemSetting from '../models/SystemSetting';
 import { CommissionEngine } from '../services/CommissionEngine';
+import { activateUser } from '../services/userActivationService';
 
 // Helper to get setting (Duplicated from productController - potentially extract to service later)
 const getSetting = async (key: string): Promise<boolean> => {
@@ -16,7 +17,7 @@ const getSetting = async (key: string): Promise<boolean> => {
 export const createOrder = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user?.id; // Authed User
-        const { items, guestDetails, referrerId } = req.body;
+        const { items, guestDetails, referrerId, paymentMethod = 'WALLET' } = req.body;
 
         const isGuest = !userId;
 
@@ -78,8 +79,10 @@ export const createOrder = async (req: Request, res: Response) => {
         }
 
         // 3. Payment Processing
-        // MEMBER: Wallet Deduction
-        if (!isGuest) {
+        let orderStatus = 'PAID';
+
+        // MEMBER: Wallet Deduction (Only if paymentMethod is WALLET)
+        if (!isGuest && paymentMethod === 'WALLET') {
             const wallet = await Wallet.findOne({ userId });
             if (!wallet || wallet.balance < totalAmount) {
                 return res.status(400).json({ message: 'Insufficient wallet balance' });
@@ -95,9 +98,12 @@ export const createOrder = async (req: Request, res: Response) => {
             } as any);
             await wallet.save();
         }
-        // GUEST: Assume Payment Gateway Success (Mocked for now)
+        else if (paymentMethod === 'CASH') {
+            orderStatus = 'PENDING';
+        }
+        // GUEST or MEMBER via CREDIT_CARD: Assume Payment Gateway Success
         else {
-            // In a real app, verify Stripe/PayPal here.
+            // For future PayPal here.
         }
 
         // 4. Create Order Record
@@ -109,8 +115,8 @@ export const createOrder = async (req: Request, res: Response) => {
             items: orderItems,
             totalAmount,
             totalPV,
-            status: 'PAID', // Assumed paid
-            paymentMethod: isGuest ? 'CREDIT_CARD' : 'WALLET'
+            status: orderStatus,
+            paymentMethod: isGuest ? 'CREDIT_CARD' : paymentMethod
         });
 
         // 5. Inventory Update
@@ -118,30 +124,36 @@ export const createOrder = async (req: Request, res: Response) => {
             await Product.findByIdAndUpdate(item.productId, { $inc: { stock: -item.quantity } });
         }
 
-        // 6. Commission & Profit Distribution
-        const beneficiaryId = isGuest ? referrerId : userId;
-
-        if (beneficiaryId) {
-            // A. Distribute Retail Profit (Guests Only)
-            if (isGuest && totalRetailProfit > 0) {
-                const refWallet = await Wallet.findOne({ userId: referrerId });
-                if (refWallet) {
-                    refWallet.balance += totalRetailProfit;
-                    refWallet.transactions.push({
-                        type: 'BONUS', // Generic bonus type or new RETAIL_PROFIT
-                        amount: totalRetailProfit,
-                        description: `Retail Profit from Guest Order #${order._id}`,
-                        date: new Date(),
-                        status: 'COMPLETED'
-                    } as any);
-                    await refWallet.save();
-                }
+        // --- SKIP ACTIVATION IF PENDING ---
+        if (orderStatus === 'PAID') {
+            // 5b. Activate User
+            if (userId) {
+                await activateUser(userId);
             }
 
-            // B. Propagate PV
-            // If Guest -> Referrer gets PV.
-            // If Member -> Member gets PV (Personal Volume) + Upline gets Group Volume.
-            await CommissionEngine.updateUplinePV(beneficiaryId, totalPV);
+            // 6. Commission & Profit Distribution
+            const beneficiaryId = isGuest ? referrerId : userId;
+
+            if (beneficiaryId) {
+                // A. Distribute Retail Profit (Guests Only)
+                if (isGuest && totalRetailProfit > 0) {
+                    const refWallet = await Wallet.findOne({ userId: referrerId });
+                    if (refWallet) {
+                        refWallet.balance += totalRetailProfit;
+                        refWallet.transactions.push({
+                            type: 'BONUS', // Generic bonus type or new RETAIL_PROFIT
+                            amount: totalRetailProfit,
+                            description: `Retail Profit from Guest Order #${order._id}`,
+                            date: new Date(),
+                            status: 'COMPLETED'
+                        } as any);
+                        await refWallet.save();
+                    }
+                }
+
+                // B. Propagate PV
+                await CommissionEngine.updateUplinePV(beneficiaryId, totalPV);
+            }
         }
 
         res.status(201).json(order);
@@ -159,5 +171,51 @@ export const getMyOrders = async (req: Request, res: Response) => {
         res.json(orders);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching orders' });
+    }
+};
+
+// Admin: Get All Orders
+export const getAllOrders = async (req: Request, res: Response) => {
+    try {
+        const { status } = req.query;
+        const filter: any = {};
+        if (status) filter.status = status;
+
+        const orders = await Order.find(filter).populate('userId', 'firstName lastName email').sort({ createdAt: -1 });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching orders' });
+    }
+};
+
+// Admin: Update Order Status
+export const updateOrderStatus = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const order = await Order.findById(id);
+        if (!order) return res.status(404).json({ message: 'Order not found' });
+
+        const oldStatus = order.status;
+        order.status = status;
+        await order.save();
+
+        // Trigger Activation if PENDING -> PAID
+        if (oldStatus === 'PENDING' && status === 'PAID') {
+            if (order.userId) {
+                const userId = order.userId.toString();
+                // 1. Activate User
+                await activateUser(userId);
+
+                // 2. Propagate PV
+                await CommissionEngine.updateUplinePV(userId, order.totalPV);
+            }
+        }
+
+        res.json(order);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating order' });
     }
 };

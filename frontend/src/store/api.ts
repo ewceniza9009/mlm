@@ -360,6 +360,21 @@ export const api = createApi({
     getMyOrders: builder.query({
       query: () => 'orders/my-orders',
     }),
+    getAllOrders: builder.query({
+      query: (params) => {
+        const qs = new URLSearchParams(params).toString();
+        return `orders/admin/all?${qs}`;
+      },
+      providesTags: ['Admin']
+    }),
+    updateOrderStatus: builder.mutation({
+      query: ({ id, status }) => ({
+        url: `orders/admin/${id}/status`,
+        method: 'PUT',
+        body: { status }
+      }),
+      invalidatesTags: ['Admin', 'Wallet', 'Tree']
+    }),
   }),
 });
 
@@ -418,5 +433,7 @@ export const {
   useCreateProductMutation,
   useUpdateProductMutation,
   useDeleteProductMutation,
-  useRestockProductMutation
+  useRestockProductMutation,
+  useGetAllOrdersQuery,
+  useUpdateOrderStatusMutation
 } = api;

@@ -1,26 +1,34 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from './store';
+
+// Components
 import DashboardLayout from './components/DashboardLayout';
+import PendingPaymentGuard from './components/PendingPaymentGuard';
+
+// Pages
 import DashboardHome from './pages/DashboardHome';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminCommissions from './pages/AdminCommissions';
-import AdminPackages from './pages/AdminPackages';
-import SupportPage from './pages/SupportPage';
-import AdminSupportPage from './pages/AdminSupportPage';
-import AdminWithdrawalsPage from './pages/AdminWithdrawalsPage';
-import AdminKYCPage from './pages/AdminKYCPage';
-import AdminSettingsPage from './pages/AdminSettingsPage';
-import AdminUsersPage from './pages/AdminUsersPage';
-import AdminProductsPage from './pages/AdminProductsPage';
-import EnrollMember from './pages/EnrollMember';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import PublicShopPage from './pages/PublicShopPage';
+import EnrollMember from './pages/EnrollMember';
 import WalletPage from './pages/Wallet';
+import ShopPage from './pages/ShopPage';
 import Settings from './pages/Settings';
 import Network from './pages/Network';
-import ShopPage from './pages/ShopPage';
-import { useSelector } from 'react-redux';
-import { RootState } from './store';
+import SupportPage from './pages/SupportPage';
+
+// Admin Pages
+import AdminDashboard from './pages/AdminDashboard';
+import AdminCommissions from './pages/AdminCommissions';
+import AdminPackages from './pages/AdminPackages';
+import AdminWithdrawalsPage from './pages/AdminWithdrawalsPage';
+import AdminSupportPage from './pages/AdminSupportPage';
+import AdminUsersPage from './pages/AdminUsersPage';
+import AdminKYCPage from './pages/AdminKYCPage';
+import AdminSettingsPage from './pages/AdminSettingsPage';
+import AdminProductsPage from './pages/AdminProductsPage';
+import AdminOrdersPage from './pages/AdminOrdersPage';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const token = useSelector((state: RootState) => state.auth.token);
@@ -31,8 +39,8 @@ function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
+        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
-
         <Route path="/register" element={<Register />} />
         <Route path="/store" element={<PublicShopPage />} />
 
@@ -41,7 +49,9 @@ function App() {
           path="/"
           element={
             <PrivateRoute>
-              <DashboardLayout />
+              <PendingPaymentGuard>
+                <DashboardLayout />
+              </PendingPaymentGuard>
             </PrivateRoute>
           }
         >
@@ -62,7 +72,9 @@ function App() {
           <Route path="admin/users" element={<AdminUsersPage />} />
           <Route path="admin/kyc" element={<AdminKYCPage />} />
           <Route path="admin/settings" element={<AdminSettingsPage />} />
+          <Route path="admin/settings" element={<AdminSettingsPage />} />
           <Route path="admin/products" element={<AdminProductsPage />} />
+          <Route path="admin/orders" element={<AdminOrdersPage />} />
         </Route>
       </Routes>
     </Router>

@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
-import { ShoppingBag, Search, Filter, ShoppingCart, Plus } from 'lucide-react';
+import { ShoppingBag, Search, Filter, ShoppingCart, Plus, AlertTriangle } from 'lucide-react';
 import { useGetShopProductsQuery } from '../store/api';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { motion } from 'framer-motion';
 import { useCart } from '../components/CartContext';
 import { CartDrawer } from '../components/CartDrawer';
@@ -10,6 +12,7 @@ const ShopPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const { addToCart, toggleCart, itemCount } = useCart();
+    const { user } = useSelector((state: RootState) => state.auth);
 
     // Derive categories from products
     const categories = useMemo(() => {
@@ -31,6 +34,19 @@ const ShopPage = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Product Shop</h1>
                     <p className="text-gray-500 dark:text-slate-400">Purchase products to boost your volume</p>
+
+                    {user?.status === 'pending_payment' && (
+                        <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
+                            <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={20} />
+                            <div>
+                                <h3 className="font-bold text-amber-500">Account Activation Required</h3>
+                                <p className="text-sm text-amber-500/80">
+                                    Please purchase an enrollment product to activate your account and secure your position in the network.
+                                    Once your purchase is confirmed, you will be automatically placed.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-3">

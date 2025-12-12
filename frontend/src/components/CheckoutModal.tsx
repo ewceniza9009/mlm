@@ -9,7 +9,10 @@ export const CheckoutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
     const { cart, totalPrice, totalPV, clearCart } = useCart();
     const { showAlert } = useUI();
     const [createOrder, { isLoading }] = useCreateOrderMutation();
-    const [paymentMethod, setPaymentMethod] = useState('wallet'); // Later: 'card', 'crypto'
+    const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'CREDIT_CARD' | 'CASH'>('wallet');
+
+    // Auto-select card if wallet is empty/insufficient or user status forbids wallet?
+    // For now, let user select.
 
     const handleCheckout = async () => {
         try {
@@ -18,9 +21,16 @@ export const CheckoutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                 quantity: item.quantity
             }));
 
-            await createOrder({ items }).unwrap();
+            await createOrder({
+                items,
+                paymentMethod: paymentMethod
+            }).unwrap();
 
-            showAlert('Order Placed Successfully! PV Credited.', 'success');
+            if (paymentMethod === 'CASH') {
+                showAlert('Order placed! Please pay administrator to activate.', 'success');
+            } else {
+                showAlert('Order Placed Successfully! PV Credited.', 'success');
+            }
             clearCart();
             onClose();
         } catch (err: any) {
@@ -100,8 +110,41 @@ export const CheckoutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                                         <p className="text-xs text-gray-500 dark:text-slate-400">Pay using your available earnings</p>
                                     </div>
                                 </div>
+
+                                {/* Credit Card Option */}
+                                <div
+                                    className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-4 mt-3 ${paymentMethod === 'CREDIT_CARD'
+                                        ? 'border-teal-500 bg-teal-50 dark:bg-teal-500/10'
+                                        : 'border-gray-200 dark:border-white/10'
+                                        }`}
+                                    onClick={() => setPaymentMethod('CREDIT_CARD')}
+                                >
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'CREDIT_CARD' ? 'border-teal-500' : 'border-gray-300'}`}>
+                                        {paymentMethod === 'CREDIT_CARD' && <div className="w-2.5 h-2.5 rounded-full bg-teal-500" />}
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-gray-900 dark:text-white">Credit / Debit Card</p>
+                                        <p className="text-xs text-gray-500 dark:text-slate-400">Pay securely via Stripe (Simulated)</p>
+                                    </div>
+                                </div>
                             </div>
 
+                            {/* Cash / Pay Later Option */}
+                            <div
+                                className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center gap-4 mt-3 ${paymentMethod === 'CASH'
+                                    ? 'border-teal-500 bg-teal-50 dark:bg-teal-500/10'
+                                    : 'border-gray-200 dark:border-white/10'
+                                    }`}
+                                onClick={() => setPaymentMethod('CASH')}
+                            >
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'CASH' ? 'border-teal-500' : 'border-gray-300'}`}>
+                                    {paymentMethod === 'CASH' && <div className="w-2.5 h-2.5 rounded-full bg-teal-500" />}
+                                </div>
+                                <div>
+                                    <p className="font-bold text-gray-900 dark:text-white">Cash / Pay Later</p>
+                                    <p className="text-xs text-gray-500 dark:text-slate-400">Order will be PENDING used admin approves.</p>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Footer / Totals */}
@@ -127,8 +170,8 @@ export const CheckoutModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
                         </div>
 
                     </motion.div>
-                </div>
+                </div >
             )}
-        </AnimatePresence>
+        </AnimatePresence >
     );
 };

@@ -20,6 +20,7 @@ export interface IUser extends Document {
   profileImage?: string;
   enrollmentPackage?: mongoose.Types.ObjectId;
   isActive: boolean;
+  status: 'pending_payment' | 'active' | 'suspended';
   role: 'admin' | 'distributor';
   kycStatus: 'pending' | 'approved' | 'rejected';
   kycDocs?: string[];
@@ -74,6 +75,7 @@ const userSchema = new Schema<IUser>({
   profileImage: { type: String },
   enrollmentPackage: { type: Schema.Types.ObjectId, ref: 'Package' },
   isActive: { type: Boolean, default: true },
+  status: { type: String, enum: ['pending_payment', 'active', 'suspended'], default: 'active' },
   role: { type: String, enum: ['admin', 'distributor'], default: 'distributor' },
   kycStatus: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
   kycDocs: [{ type: String }], // Array of file paths

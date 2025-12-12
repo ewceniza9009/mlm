@@ -10,6 +10,7 @@ const AdminSettingsPage = () => {
     const [requireKYC, setRequireKYC] = useState(false);
     const [enableShop, setEnableShop] = useState(false);
     const [enablePublicShop, setEnablePublicShop] = useState(false);
+    const [shopFirstEnrollment, setShopFirstEnrollment] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
 
     useEffect(() => {
@@ -17,6 +18,7 @@ const AdminSettingsPage = () => {
             setRequireKYC(settings.withdrawals_require_kyc === true);
             setEnableShop(settings.enableShop === true);
             setEnablePublicShop(settings.enablePublicShop === true);
+            setShopFirstEnrollment(settings.shopFirstEnrollment === true);
         }
     }, [settings]);
 
@@ -60,6 +62,20 @@ const AdminSettingsPage = () => {
         } catch (error) {
             console.error('Failed to update setting', error);
             setEnablePublicShop(!newValue); // Revert on error
+        }
+    };
+
+    const handleToggleShopFirst = async () => {
+        const newValue = !shopFirstEnrollment;
+        setShopFirstEnrollment(newValue); // Optimistic update
+
+        try {
+            await updateSetting({ key: 'shopFirstEnrollment', value: newValue }).unwrap();
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        } catch (error) {
+            console.error('Failed to update setting', error);
+            setShopFirstEnrollment(!newValue); // Revert on error
         }
     };
 
@@ -131,6 +147,28 @@ const AdminSettingsPage = () => {
                             >
                                 <span
                                     className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${enablePublicShop ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* Setting Item: Shop First Enrollment */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+                            <div>
+                                <h3 className="font-medium text-gray-900 dark:text-white">Shop First Enrollment</h3>
+                                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                                    Require new members to purchase a product before being placed in the network tree.
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={handleToggleShopFirst}
+                                disabled={isUpdating}
+                                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${shopFirstEnrollment ? 'bg-teal-500' : 'bg-gray-200 dark:bg-slate-700'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${shopFirstEnrollment ? 'translate-x-6' : 'translate-x-1'
                                         }`}
                                 />
                             </button>

@@ -29,7 +29,7 @@ const DashboardLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     'Overview': true,
-    'Finance': false,
+    'Finance': true, // Expanded by default for visibility
     'Members': false,
     'Catalog': false,
     'System': false
@@ -125,6 +125,7 @@ const DashboardLayout = () => {
                     title: 'Finance',
                     items: [
                       { icon: CreditCard, label: 'Run Commissions', path: '/admin/commissions' },
+                      { icon: ShoppingBag, label: 'Order Management', path: '/admin/orders' },
                       { icon: Wallet, label: 'Withdrawals', path: '/admin/withdrawals' }
                     ]
                   },

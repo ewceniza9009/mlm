@@ -5,10 +5,17 @@ import Commission from '../models/Commission';
 import Wallet from '../models/Wallet';
 import Package from '../models/Package';
 import SystemConfig from '../models/SystemConfig';
+import SystemSetting from '../models/SystemSetting';
 import spilloverService from '../services/spilloverService';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { createNotification } from './notificationController';
+
+// Helper to get setting
+const getSetting = async (key: string): Promise<boolean> => {
+  const setting = await SystemSetting.findOne({ key });
+  return setting ? setting.value === true : false;
+};
 
 // Register Logic
 export const register = async (req: Request, res: Response) => {
@@ -52,55 +59,72 @@ export const register = async (req: Request, res: Response) => {
       address
     });
 
-    // Check Hybrid Holding Tank Logic
-    // 1. Check Sponsor Override
-    // 2. If 'system', check Global Config
-
-    // Check Hybrid Holding Tank Logic
+    // Check Shop First Logic
+    const shopFirstEnrollment = await getSetting('shopFirstEnrollment');
     let savedUser: any;
-    let isHoldingTank = false;
 
-    if (sponsor) {
-      // @ts-ignore
-      const sponsorSetting = (sponsor as any).enableHoldingTank || 'system'; // Default to system if undefined
-      console.log(`[Register] Sponsor: ${sponsor.username}, Preference: ${sponsorSetting}`);
-
-      if (sponsorSetting === 'enabled') {
-        isHoldingTank = true;
-        console.log('[Register] Override: FORCE HOLDING TANK');
-      } else if (sponsorSetting === 'disabled') {
-        isHoldingTank = false;
-        console.log('[Register] Override: FORCE DIRECT PLACEMENT');
-      } else {
-        // System Default
-        const config = await (SystemConfig as any).getLatest();
-        isHoldingTank = config.holdingTankMode;
-        console.log(`[Register] Using System Default: ${isHoldingTank}`);
-      }
-    }
-
-    if (isHoldingTank && sponsor) {
-      // PARK USER
+    if (shopFirstEnrollment) {
+      // NEW FLOW: Shop First
+      console.log('[Register] Shop First Enrollment: ENABLED');
+      newUser.status = 'pending_payment';
+      newUser.isActive = true; // Can login
       newUser.isPlaced = false;
-      newUser.sponsorId = sponsor._id as any;
-      savedUser = await newUser.save();
-      // Do NOT trigger PV or Commissions yet
-    }
-    else if (sponsor) {
-      // AUTO PLACE
-      newUser.isPlaced = true;
-      savedUser = await spilloverService.placeUser(newUser, sponsor.id);
 
-      // Trigger Bonuses (Lazy Load to avoid circular dependency issues)
-      const { CommissionEngine } = require('../services/CommissionEngine');
-      const pkgPrice = pkg ? pkg.price : 0;
-      await CommissionEngine.distributeReferralBonus(sponsor.id, savedUser._id.toString(), pkgPrice);
-      if (pkg && pkg.pv) {
-        await CommissionEngine.updateUplinePV(savedUser._id.toString(), pkg.pv);
+      // Sponsor is attached but placement deferred
+      if (sponsor) {
+        newUser.sponsorId = sponsor._id as any;
       }
-    } else {
-      newUser.isPlaced = true;
+
       savedUser = await newUser.save();
+    } else {
+      // LEGACY FLOW: Immediate Placement
+      console.log('[Register] Shop First Enrollment: DISABLED (Using Legacy Flow)');
+
+      // Check Hybrid Holding Tank Logic
+      let isHoldingTank = false;
+
+      if (sponsor) {
+        // @ts-ignore
+        const sponsorSetting = (sponsor as any).enableHoldingTank || 'system'; // Default to system if undefined
+        console.log(`[Register] Sponsor: ${sponsor.username}, Preference: ${sponsorSetting}`);
+
+        if (sponsorSetting === 'enabled') {
+          isHoldingTank = true;
+          console.log('[Register] Override: FORCE HOLDING TANK');
+        } else if (sponsorSetting === 'disabled') {
+          isHoldingTank = false;
+          console.log('[Register] Override: FORCE DIRECT PLACEMENT');
+        } else {
+          // System Default
+          const config = await (SystemConfig as any).getLatest();
+          isHoldingTank = config.holdingTankMode;
+          console.log(`[Register] Using System Default: ${isHoldingTank}`);
+        }
+      }
+
+      if (isHoldingTank && sponsor) {
+        // PARK USER
+        newUser.isPlaced = false;
+        newUser.sponsorId = sponsor._id as any;
+        savedUser = await newUser.save();
+        // Do NOT trigger PV or Commissions yet
+      }
+      else if (sponsor) {
+        // AUTO PLACE
+        newUser.isPlaced = true;
+        savedUser = await spilloverService.placeUser(newUser, sponsor.id);
+
+        // Trigger Bonuses (Lazy Load to avoid circular dependency issues)
+        const { CommissionEngine } = require('../services/CommissionEngine');
+        const pkgPrice = pkg ? pkg.price : 0;
+        await CommissionEngine.distributeReferralBonus(sponsor.id, savedUser._id.toString(), pkgPrice);
+        if (pkg && pkg.pv) {
+          await CommissionEngine.updateUplinePV(savedUser._id.toString(), pkg.pv);
+        }
+      } else {
+        newUser.isPlaced = true;
+        savedUser = await newUser.save();
+      }
     }
 
     // Init Wallet & Commission
@@ -157,6 +181,7 @@ export const login = async (req: Request, res: Response) => {
         id: user._id,
         username: user.username,
         email: user.email,
+        status: user.status,
         role: user.role,
         firstName: user.firstName,
         middleName: user.middleName,
@@ -208,6 +233,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
         id: updatedUser._id,
         username: updatedUser.username,
         email: updatedUser.email,
+        status: updatedUser.status,
         role: updatedUser.role,
         firstName: updatedUser.firstName,
         middleName: updatedUser.middleName,

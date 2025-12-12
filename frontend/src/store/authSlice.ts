@@ -18,6 +18,7 @@ interface User {
     country?: string;
   };
   isActive: boolean;
+  status: 'pending_payment' | 'active' | 'suspended';
   role: 'admin' | 'distributor';
   kycStatus?: 'pending' | 'approved' | 'rejected';
   kycDocs?: string[];

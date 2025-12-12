@@ -340,7 +340,16 @@ export const api = createApi({
       }),
       invalidatesTags: ['Packages'],
     }),
+    restockProduct: builder.mutation({
+      query: ({ id, quantity }) => ({
+        url: `shop/${id}/restock`,
+        method: 'PATCH',
+        body: { quantity },
+      }),
+      invalidatesTags: ['Packages'],
+    }),
     createOrder: builder.mutation({
+
       query: (body) => ({
         url: 'orders',
         method: 'POST',
@@ -408,5 +417,6 @@ export const {
   useGetAllProductsQuery,
   useCreateProductMutation,
   useUpdateProductMutation,
-  useDeleteProductMutation
+  useDeleteProductMutation,
+  useRestockProductMutation
 } = api;

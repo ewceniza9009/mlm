@@ -3,7 +3,8 @@ import {
     useGetAllProductsQuery,
     useCreateProductMutation,
     useUpdateProductMutation,
-    useDeleteProductMutation
+    useDeleteProductMutation,
+    useRestockProductMutation
 } from '../store/api';
 import {
     ShoppingBag,
@@ -12,8 +13,10 @@ import {
     Edit2,
     Trash2,
     X,
-    Image as ImageIcon
+    Image as ImageIcon,
+    PackagePlus
 } from 'lucide-react';
+
 
 interface Product {
     _id: string;
@@ -33,10 +36,15 @@ const AdminProductsPage = () => {
     const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
     const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
     const [deleteProduct] = useDeleteProductMutation();
+    const [restockProduct, { isLoading: isRestocking }] = useRestockProductMutation();
 
     const [isFormatModalOpen, setIsFormatModalOpen] = useState(false);
+    const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+    const [productToRestock, setProductToRestock] = useState<Product | null>(null);
+    const [restockQuantity, setRestockQuantity] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+
 
     const [formData, setFormData] = useState({
         name: '',
@@ -112,6 +120,30 @@ const AdminProductsPage = () => {
             }
         }
     };
+
+    const handleRestockClick = (product: Product) => {
+        setProductToRestock(product);
+        setRestockQuantity('');
+        setIsRestockModalOpen(true);
+    };
+
+    const handleRestockSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!productToRestock) return;
+
+        try {
+            await restockProduct({
+                id: productToRestock._id,
+                quantity: Number(restockQuantity)
+            }).unwrap();
+            setIsRestockModalOpen(false);
+            setProductToRestock(null);
+            setRestockQuantity('');
+        } catch (error) {
+            console.error('Failed to restock product', error);
+        }
+    };
+
 
     const filteredProducts = products?.filter((p: Product) =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -211,7 +243,15 @@ const AdminProductsPage = () => {
                                     <td className="px-6 py-4 whitespace-nowrap text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button
+                                                onClick={() => handleRestockClick(product)}
+                                                className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-500/10 rounded-lg transition-colors"
+                                                title="Restock"
+                                            >
+                                                <PackagePlus size={18} />
+                                            </button>
+                                            <button
                                                 onClick={() => handleEdit(product)}
+
                                                 className="p-2 text-gray-400 hover:text-teal-500 hover:bg-teal-50 dark:hover:bg-teal-500/10 rounded-lg transition-colors"
                                             >
                                                 <Edit2 size={18} />
@@ -368,8 +408,64 @@ const AdminProductsPage = () => {
                     </div>
                 </div>
             )}
+            {/* Restock Modal */}
+            {isRestockModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-[#1a1b23] rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animation-scale-in">
+                        <div className="p-6 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                Restock Product
+                            </h2>
+                            <button
+                                onClick={() => setIsRestockModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-600 dark:hover:text-white"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleRestockSubmit} className="p-6 space-y-4">
+                            <div>
+                                <h3 className="text-base font-medium text-gray-900 dark:text-white mb-1">{productToRestock?.name}</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Current Stock: {productToRestock?.stock}</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Quantity to Add</label>
+                                <input
+                                    type="number"
+                                    required
+                                    min="1"
+                                    value={restockQuantity}
+                                    onChange={e => setRestockQuantity(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                                    placeholder="Enter quantity..."
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsRestockModalOpen(false)}
+                                    className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isRestocking}
+                                    className="px-6 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-lg hover:shadow-lg transition-all active:scale-95 disabled:opacity-50"
+                                >
+                                    {isRestocking ? 'Restocking...' : 'Restock'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
+
 
 export default AdminProductsPage;

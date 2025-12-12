@@ -100,3 +100,26 @@ export const deleteProduct = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Error deleting product' });
     }
 };
+
+// Admin: Restock Product
+export const restockProduct = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { quantity } = req.body;
+
+        if (!quantity || isNaN(quantity) || quantity <= 0) {
+            return res.status(400).json({ message: 'Invalid quantity' });
+        }
+
+        const product = await Product.findByIdAndUpdate(
+            id,
+            { $inc: { stock: quantity } },
+            { new: true }
+        );
+
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+        res.json(product);
+    } catch (error) {
+        res.status(500).json({ message: 'Error restocking product' });
+    }
+};

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { getPaginationParams, buildSort, buildSearch } from '../utils/queryHelpers';
 import Product from '../models/Product';
+import User from '../models/User';
 // import SystemConfig from '../models/SystemConfig'; // Deprecated for shop settings
 import SystemSetting from '../models/SystemSetting';
 
@@ -138,5 +139,50 @@ export const restockProduct = async (req: Request, res: Response) => {
         res.json(product);
     } catch (error) {
         res.status(500).json({ message: 'Error restocking product' });
+    }
+};
+
+// Wishlist Logic
+export const getWishlist = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const user = await User.findById(userId).populate('wishlist');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        // Filter out nulls if product was deleted
+        const wishlist = (user.wishlist || []).filter(item => item !== null);
+        res.json(wishlist);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching wishlist' });
+    }
+};
+
+export const addToWishlist = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { id } = req.params; // Product ID
+
+        await User.findByIdAndUpdate(userId, {
+            $addToSet: { wishlist: id }
+        });
+
+        res.json({ message: 'Added to wishlist' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error adding to wishlist' });
+    }
+};
+
+export const removeFromWishlist = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { id } = req.params;
+
+        await User.findByIdAndUpdate(userId, {
+            $pull: { wishlist: id }
+        });
+
+        res.json({ message: 'Removed from wishlist' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error removing from wishlist' });
     }
 };

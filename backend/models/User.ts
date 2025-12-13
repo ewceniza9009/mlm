@@ -51,6 +51,7 @@ export interface IUser extends Document {
   multiCenter: boolean;
   rank: 'Bronze' | 'Silver' | 'Gold' | 'Diamond';
   isPlaced: boolean;
+  wishlist?: mongoose.Types.ObjectId[];
 }
 
 const userSchema = new Schema<IUser>({
@@ -111,7 +112,8 @@ const userSchema = new Schema<IUser>({
   },
   enableHoldingTank: { type: String, enum: ['system', 'enabled', 'disabled'], default: 'system' },
   multiCenter: { type: Boolean, default: false },
-  rank: { type: String, enum: ['Bronze', 'Silver', 'Gold', 'Diamond'], default: 'Bronze' }
+  rank: { type: String, enum: ['Bronze', 'Silver', 'Gold', 'Diamond'], default: 'Bronze' },
+  wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }]
 });
 
 // Pre-save hook for path/level updates

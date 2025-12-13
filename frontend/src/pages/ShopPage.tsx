@@ -6,13 +6,29 @@ import { RootState } from '../store';
 import { motion } from 'framer-motion';
 import { useCart } from '../components/CartContext';
 import { CartDrawer } from '../components/CartDrawer';
+import { ProductDetailsModal } from '../components/ProductDetailsModal'; // Import Modal
+import { Eye, Heart } from 'lucide-react'; // Import Eye Icon
+import { useGetWishlistQuery, useAddToWishlistMutation, useRemoveFromWishlistMutation } from '../store/api';
 
 const ShopPage = () => {
     const { data: products, isLoading } = useGetShopProductsQuery({});
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('All');
+    const [selectedProduct, setSelectedProduct] = useState<any | null>(null); // Selected Product State
     const { addToCart, toggleCart, itemCount } = useCart();
     const { user } = useSelector((state: RootState) => state.auth);
+
+    // Wishlist
+    const { data: wishlist } = useGetWishlistQuery({});
+    const [addToWishlist] = useAddToWishlistMutation();
+    const [removeFromWishlist] = useRemoveFromWishlistMutation();
+
+    const toggleWishlist = (e: React.MouseEvent, productId: string) => {
+        e.stopPropagation();
+        const exists = wishlist?.some((p: any) => p._id === productId);
+        if (exists) removeFromWishlist(productId);
+        else addToWishlist(productId);
+    };
 
     // Derive categories from products
     const categories = useMemo(() => {
@@ -112,13 +128,31 @@ const ShopPage = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="bg-white dark:bg-[#1a1b23] rounded-2xl p-4 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all flex flex-col h-full group"
                                 >
-                                    {/* Image */}
-                                    <div className="aspect-square rounded-xl bg-gray-50 dark:bg-white/5 mb-4 flex items-center justify-center relative overflow-hidden">
+                                    {/* Image Container - Clickable */}
+                                    <div
+                                        className="aspect-square rounded-xl bg-gray-50 dark:bg-white/5 mb-4 flex items-center justify-center relative overflow-hidden cursor-pointer group/image"
+                                        onClick={() => setSelectedProduct(product)}
+                                    >
                                         {product.image ? (
                                             <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         ) : (
                                             <ShoppingBag size={48} className="text-gray-300 dark:text-slate-600" />
                                         )}
+
+                                        {/* Quick View Overlay */}
+                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span className="bg-white/90 dark:bg-black/80 text-gray-900 dark:text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transform translate-y-4 group-hover/image:translate-y-0 transition-transform">
+                                                <Eye size={14} /> Quick View
+                                            </span>
+                                        </div>
+
+                                        {/* Wishlist Button */}
+                                        <button
+                                            onClick={(e) => toggleWishlist(e, product._id)}
+                                            className="absolute top-2 right-2 p-2 bg-white/80 dark:bg-black/50 backdrop-blur-sm rounded-full text-gray-400 hover:text-red-500 transition-all z-10"
+                                        >
+                                            <Heart size={18} className={wishlist?.some((p: any) => p._id === product._id) ? "fill-red-500 text-red-500" : ""} />
+                                        </button>
 
                                         {product.stock <= 0 && (
                                             <div className="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-[1px] flex items-center justify-center">
@@ -138,7 +172,13 @@ const ShopPage = () => {
                                             </span>
                                         </div>
 
-                                        <h3 className="font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 p-0.5" title={product.name}>{product.name}</h3>
+                                        <h3
+                                            className="font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 p-0.5 cursor-pointer hover:text-teal-500 transition-colors"
+                                            title={product.name}
+                                            onClick={() => setSelectedProduct(product)}
+                                        >
+                                            {product.name}
+                                        </h3>
                                         <p className="text-xs text-gray-500 dark:text-slate-400 line-clamp-2 mb-4 flex-1">{product.description}</p>
 
                                         <div className="flex items-center justify-between mt-auto">
@@ -163,6 +203,11 @@ const ShopPage = () => {
             </div>
 
             <CartDrawer />
+            <ProductDetailsModal
+                product={selectedProduct}
+                isOpen={!!selectedProduct}
+                onClose={() => setSelectedProduct(null)}
+            />
         </div>
     );
 };

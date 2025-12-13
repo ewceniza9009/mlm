@@ -13,7 +13,7 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ['User', 'Wallet', 'Tree', 'Packages', 'Tickets', 'Withdrawals', 'Admin', 'SystemLogs', 'Notifications', 'Settings', 'Products'],
+  tagTypes: ['User', 'Wallet', 'Tree', 'Packages', 'Tickets', 'Withdrawals', 'Admin', 'SystemLogs', 'Notifications', 'Settings', 'Products', 'Wishlist'],
   endpoints: (builder) => ({
     getTree: builder.query({
       query: (rootId) => `network/tree${rootId ? `?rootId=${rootId}` : ''}`,
@@ -358,6 +358,27 @@ export const api = createApi({
       }),
       invalidatesTags: ['Packages'],
     }),
+
+    // Wishlist
+    getWishlist: builder.query({
+      query: () => 'shop/wishlist',
+      providesTags: ['Wishlist'],
+    }),
+    addToWishlist: builder.mutation({
+      query: (id) => ({
+        url: `shop/wishlist/${id}`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Wishlist'],
+    }),
+    removeFromWishlist: builder.mutation({
+      query: (id) => ({
+        url: `shop/wishlist/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Wishlist'],
+    }),
+
     createOrder: builder.mutation({
 
       query: (body) => ({
@@ -445,6 +466,9 @@ export const {
   useUpdateProductMutation,
   useDeleteProductMutation,
   useRestockProductMutation,
+  useGetWishlistQuery,
+  useAddToWishlistMutation,
+  useRemoveFromWishlistMutation,
   useGetAllOrdersQuery,
   useUpdateOrderStatusMutation
 } = api;

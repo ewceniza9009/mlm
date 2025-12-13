@@ -13,7 +13,8 @@ import {
   ChevronRight,
   Package,
   CreditCard,
-  FileText
+  FileText,
+  Heart
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
@@ -57,7 +58,11 @@ const DashboardLayout = () => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'My Network', path: '/dashboard/network' },
     { icon: Wallet, label: 'Wallet', path: '/dashboard/wallet' },
-    ...(shopStatus?.enableShop ? [{ icon: ShoppingBag, label: 'Shop', path: '/dashboard/shop' }] : []),
+    ...(shopStatus?.enableShop ? [
+      { icon: ShoppingBag, label: 'Shop', path: '/dashboard/shop' },
+      { icon: Heart, label: 'Wishlist', path: '/dashboard/shop/wishlist' },
+      { icon: Package, label: 'My Orders', path: '/dashboard/shop/orders' }
+    ] : []),
     { icon: MessageSquare, label: 'Support', path: '/dashboard/support' },
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ].filter(item => {
@@ -114,91 +119,99 @@ const DashboardLayout = () => {
           ))}
 
           {user?.role === 'admin' && (
-            <div className="mt-8 space-y-4">
-              <div className="flex items-center justify-between px-4">
-                <p className="text-xs font-semibold text-amber-500/80 uppercase tracking-wider">Administration</p>
-                <button
-                  onClick={() => setExpandedGroups(prev => {
-                    const allCollapsed = Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {});
-                    return allCollapsed;
-                  })}
-                  className="text-[10px] text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors uppercase font-medium tracking-wider"
-                >
-                  Collapse All
-                </button>
-              </div>
+            <div className="mt-8 px-2 pb-8">
+              <div className="bg-gray-100 dark:bg-[#15161c] rounded-2xl border border-gray-200 dark:border-white/5 overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02]">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] bg-gradient-to-r from-teal-600 to-emerald-600 dark:from-teal-400 dark:to-emerald-400 bg-clip-text text-transparent">
+                    Admin Suite
+                  </p>
+                  <button
+                    onClick={() => setExpandedGroups(prev => {
+                      const allCollapsed = Object.keys(prev).reduce((acc, key) => ({ ...acc, [key]: false }), {});
+                      return allCollapsed;
+                    })}
+                    className="text-[10px] font-bold text-gray-400 hover:text-teal-500 transition-colors"
+                  >
+                    COLLAPSE
+                  </button>
+                </div>
 
-              {/* Admin Groups */}
-              <div className="space-y-1 mx-2">
-                {[
-                  {
-                    title: 'Overview',
-                    items: [
-                      { icon: LayoutDashboard, label: 'System Overview', path: '/dashboard/admin' }
-                    ]
-                  },
-                  {
-                    title: 'Finance',
-                    items: [
-                      { icon: CreditCard, label: 'Run Commissions', path: '/dashboard/admin/commissions' },
-                      { icon: ShoppingBag, label: 'Order Management', path: '/dashboard/admin/orders' },
-                      { icon: Wallet, label: 'Withdrawals', path: '/dashboard/admin/withdrawals' }
-                    ]
-                  },
-                  {
-                    title: 'Members',
-                    items: [
-                      { icon: Users, label: 'User Management', path: '/dashboard/admin/users' },
-                      { icon: FileText, label: 'KYC Requests', path: '/dashboard/admin/kyc' },
-                      { icon: MessageSquare, label: 'Support Tickets', path: '/dashboard/admin/support' }
-                    ]
-                  },
-                  {
-                    title: 'Catalog',
-                    items: [
-                      { icon: Package, label: 'Packages', path: '/dashboard/admin/packages' },
-                      ...(shopStatus?.enableShop ? [{ icon: ShoppingBag, label: 'Products', path: '/dashboard/admin/products' }] : [])
-                    ]
-                  },
-                  {
-                    title: 'System',
-                    items: [
-                      { icon: Settings, label: 'System Settings', path: '/dashboard/admin/settings' }
-                    ]
-                  }
-                ].map((group) => (
-                  <div key={group.title} className="rounded-xl overflow-hidden bg-amber-50/50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/10">
-                    <button
-                      onClick={() => toggleGroup(group.title)}
-                      className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-100/50 dark:hover:bg-amber-500/10 transition-colors"
-                    >
-                      <span>{group.title}</span>
-                      {expandedGroups[group.title] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                    </button>
+                {/* Groups */}
+                <div className="p-2 space-y-1">
+                  {[
+                    {
+                      title: 'Overview',
+                      items: [
+                        { icon: LayoutDashboard, label: 'System Overview', path: '/dashboard/admin' }
+                      ]
+                    },
+                    {
+                      title: 'Finance',
+                      items: [
+                        { icon: CreditCard, label: 'Run Commissions', path: '/dashboard/admin/commissions' },
+                        { icon: ShoppingBag, label: 'Order Management', path: '/dashboard/admin/orders' },
+                        { icon: Wallet, label: 'Withdrawals', path: '/dashboard/admin/withdrawals' }
+                      ]
+                    },
+                    {
+                      title: 'Members',
+                      items: [
+                        { icon: Users, label: 'User Management', path: '/dashboard/admin/users' },
+                        { icon: FileText, label: 'KYC Requests', path: '/dashboard/admin/kyc' },
+                        { icon: MessageSquare, label: 'Support Tickets', path: '/dashboard/admin/support' }
+                      ]
+                    },
+                    {
+                      title: 'Catalog',
+                      items: [
+                        { icon: Package, label: 'Packages', path: '/dashboard/admin/packages' },
+                        ...(shopStatus?.enableShop ? [{ icon: ShoppingBag, label: 'Products', path: '/dashboard/admin/products' }] : [])
+                      ]
+                    },
+                    {
+                      title: 'System',
+                      items: [
+                        { icon: Settings, label: 'System Settings', path: '/dashboard/admin/settings' }
+                      ]
+                    }
+                  ].map((group) => (
+                    <div key={group.title} className="group/admin-section">
+                      <button
+                        onClick={() => toggleGroup(group.title)}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[10px] font-bold text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-white/5 transition-all uppercase tracking-wider"
+                      >
+                        <span className="flex items-center gap-2">
+                          <div className={`w-1 h-1 rounded-full ${expandedGroups[group.title] ? 'bg-teal-500' : 'bg-gray-400 dark:bg-gray-600'} transition-colors`} />
+                          {group.title}
+                        </span>
+                        <ChevronRight size={12} className={`transition-transform duration-300 ${expandedGroups[group.title] ? 'rotate-90' : ''}`} />
+                      </button>
 
-                    {expandedGroups[group.title] && (
-                      <div className="p-1 space-y-1">
-                        {group.items.map((item) => (
-                          <button
-                            key={item.path}
-                            onClick={() => {
-                              navigate(item.path);
-                              setIsSidebarOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${location.pathname === item.path
-                              ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-100'
-                              : 'text-gray-600 dark:text-amber-100/60 hover:bg-amber-100 dark:hover:bg-amber-500/10'
-                              }`}
-                          >
-                            {/*  <item.icon size={16} className={location.pathname === item.path ? 'text-amber-600 dark:text-amber-400' : 'opacity-70'} /> */}
-                            <div className={`w-1.5 h-1.5 rounded-full ${location.pathname === item.path ? 'bg-amber-500' : 'bg-gray-300 dark:bg-white/20'}`}></div>
-                            {item.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      {/* Animated Height Container could go here, for now just conditional */}
+                      {expandedGroups[group.title] && (
+                        <div className="ml-3.5 pl-3 border-l border-gray-200 dark:border-white/10 my-1 space-y-1">
+                          {group.items.map((item) => (
+                            <button
+                              key={item.path}
+                              onClick={() => {
+                                navigate(item.path);
+                                setIsSidebarOpen(false);
+                              }}
+                              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 group/item ${location.pathname === item.path
+                                ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
+                                }`}
+                            >
+                              <item.icon size={14} className={`transition-colors ${location.pathname === item.path ? 'text-teal-500' : 'text-gray-400 dark:text-gray-600 group-hover/item:text-gray-500 dark:group-hover/item:text-gray-300'}`} />
+                              <span>{item.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

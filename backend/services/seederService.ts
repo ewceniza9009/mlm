@@ -26,31 +26,19 @@ export const seedDatabase = async () => {
 
     // 3. Seed Packages
     const starterPkg = await new Package({
-        name: 'Starter',
-        price: 100,
-        pv: 100,
-        description: 'Basic entry package',
-        bonuses: [
-            { type: 'Direct', value: 10 }
-        ]
+      name: 'Starter',
+      price: 100,
+      pv: 100,
+      description: 'Basic entry package',
+      bonuses: [
+        { type: 'Direct', value: 10 }
+      ]
     }).save();
     console.log('   - Created Starter Package');
 
     const password = await bcrypt.hash('password', 10);
 
-    // 4. Create System Admin
-    const admin = new User({
-      username: 'admin',
-      email: 'admin@demo.com',
-      password,
-      rank: 'Diamond',
-      role: 'admin',
-      isActive: true
-    });
-    await admin.save();
-    console.log('   - Created Admin');
-
-    // 5. Create Root Distributor
+    // 4. Create Root Distributor (TOP OF TREE)
     const root = new User({
       username: 'root',
       email: 'root@demo.com',
@@ -62,62 +50,29 @@ export const seedDatabase = async () => {
       enrollmentPackage: starterPkg._id
     });
     await root.save();
-    
+
     // Init Financials for Root
     await new Wallet({ userId: root._id, balance: 5000 }).save();
     await new Commission({ userId: root._id, totalEarned: 12000 }).save();
     console.log('   - Created Root Distributor');
 
-    // 6. Create Leaders (Using Spillover Service)
-    const leftLeader = new User({
-      username: 'left_leader',
-      email: 'left@demo.com',
+    // 5. Create System Admin (Under Root)
+    const admin = new User({
+      username: 'admin',
+      email: 'admin@demo.com',
       password,
-      rank: 'Gold',
+      rank: 'Diamond',
+      role: 'admin',
+      isActive: true,
       sponsorId: root._id,
       enrollmentPackage: starterPkg._id
     });
-    await spilloverService.placeUser(leftLeader, root.id);
 
-    const rightLeader = new User({
-      username: 'right_leader',
-      email: 'right@demo.com',
-      password,
-      rank: 'Gold',
-      sponsorId: root._id,
-      enrollmentPackage: starterPkg._id
-    });
-    await spilloverService.placeUser(rightLeader, root.id);
-    console.log('   - Created Left/Right Leaders');
-
-    // 7. Create Downline Users
-    const users = [
-      { name: 'user_l1', sponsor: 'left_leader', rank: 'Silver' },
-      { name: 'user_l2', sponsor: 'left_leader', rank: 'Bronze' },
-      { name: 'user_r1', sponsor: 'right_leader', rank: 'Silver' },
-      { name: 'user_r2', sponsor: 'right_leader', rank: 'Bronze' },
-    ];
-
-    for (const u of users) {
-      const sponsor = await User.findOne({ username: u.sponsor });
-      if (sponsor) {
-        const newUser = new User({
-          username: u.name,
-          email: `${u.name}@demo.com`,
-          password,
-          rank: u.rank as any,
-          enrollmentPackage: starterPkg._id
-        });
-        const savedUser = await spilloverService.placeUser(newUser, sponsor.id);
-        
-        // Initialize wallet/commission for them
-        await new Wallet({ userId: savedUser._id }).save();
-        await new Commission({ userId: savedUser._id }).save();
-
-        // Simulate PV
-        await CommissionEngine.updateUplinePV(savedUser._id.toString(), 100);
-      }
-    }
+    // Place Admin under Root
+    await spilloverService.placeUser(admin, root.id);
+    await new Wallet({ userId: admin._id }).save();
+    await new Commission({ userId: admin._id }).save();
+    console.log('   - Created Admin (Under Root)');
 
     console.log('✅ Automated Seeding Complete');
 

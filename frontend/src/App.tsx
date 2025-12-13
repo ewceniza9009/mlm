@@ -19,6 +19,8 @@ import ShopPage from './pages/ShopPage';
 import Settings from './pages/Settings';
 import Network from './pages/Network';
 import SupportPage from './pages/SupportPage';
+import OrderHistoryPage from './pages/OrderHistoryPage';
+import WishlistPage from './pages/WishlistPage';
 
 // Admin Pages
 import AdminDashboard from './pages/AdminDashboard';
@@ -63,6 +65,8 @@ function App() {
           <Route path="enroll" element={<EnrollMember />} />
           <Route path="wallet" element={<WalletPage />} />
           <Route path="shop" element={<ShopPage />} />
+          <Route path="shop/orders" element={<OrderHistoryPage />} />
+          <Route path="shop/wishlist" element={<WishlistPage />} />
           <Route path="settings" element={<Settings />} />
           <Route path="support" element={<SupportPage />} />
 

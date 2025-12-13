@@ -38,19 +38,7 @@ const seed = async () => {
 
     const password = await bcrypt.hash('password', 10);
 
-    // 1. Create System Admin
-    const admin = new User({
-      username: 'admin',
-      email: 'admin@demo.com',
-      password,
-      rank: 'Diamond',
-      role: 'admin', // Explicit Admin Role
-      isActive: true
-    });
-    await admin.save();
-    console.log('Created Admin (admin@demo.com / password)');
-
-    // 2. Create RootDistributor
+    // 1. Create RootDistributor (TOP)
     const root = new User({
       username: 'root',
       email: 'root@demo.com',
@@ -61,59 +49,25 @@ const seed = async () => {
       spilloverPreference: 'weaker_leg'
     });
     await root.save();
+    console.log('Created Root Distributor');
 
     // Seed wallet for visual
     await new Wallet({ userId: root._id, balance: 5000 }).save();
     await new Commission({ userId: root._id, totalEarned: 12000 }).save();
 
-    console.log('Created Root Distributor');
-
-    // 3. Create Left/Right Leaders
-    const leftLeader = new User({
-      username: 'left_leader',
-      email: 'left@demo.com',
+    // 2. Create System Admin (Under Root)
+    const admin = new User({
+      username: 'admin',
+      email: 'admin@demo.com',
       password,
-      rank: 'Gold',
-      sponsorId: root._id
+      rank: 'Diamond',
+      role: 'admin', // Explicit Admin Role
+      isActive: true,
+      sponsorId: root._id // <--- Linked to Root
     });
-    await spilloverService.placeUser(leftLeader, root.id);
-
-    const rightLeader = new User({
-      username: 'right_leader',
-      email: 'right@demo.com',
-      password,
-      rank: 'Gold',
-      sponsorId: root._id
-    });
-    await spilloverService.placeUser(rightLeader, root.id);
-    console.log('Created Leaders');
-
-    // 4. Create Network
-    const users = [
-      { name: 'user_l1', sponsor: 'left_leader', rank: 'Silver' },
-      { name: 'user_l2', sponsor: 'left_leader', rank: 'Bronze' },
-      { name: 'user_r1', sponsor: 'right_leader', rank: 'Silver' },
-      { name: 'user_r2', sponsor: 'right_leader', rank: 'Bronze' },
-    ];
-
-    for (const u of users) {
-      const sponsor = await User.findOne({ username: u.sponsor });
-      if (sponsor) {
-        const newUser = new User({
-          username: u.name,
-          email: `${u.name}@demo.com`,
-          password,
-          rank: u.rank
-        });
-        await spilloverService.placeUser(newUser, sponsor.id);
-
-        // Add fake PV for commission testing
-        sponsor.currentLeftPV += 150;
-        await sponsor.save();
-
-        console.log(`Placed ${u.name} under ${u.sponsor}`);
-      }
-    }
+    // Place admin in the tree structure
+    await spilloverService.placeUser(admin, root.id);
+    console.log('Created Admin (admin@demo.com / password) under Root');
 
     console.log('Seeding Complete');
     process.exit(0);

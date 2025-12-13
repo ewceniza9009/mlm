@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRegisterMutation, useGetPackagesQuery, useGetSettingsQuery } from '../store/api';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 
 import { useUI } from '../components/UIContext';
 
 const Register = () => {
   const { showAlert } = useUI();
-  const [formData, setFormData] = useState({ username: '', email: '', password: '', sponsorUsername: '', packageName: '' });
+  const { username: referrer } = useParams();
+  const [formData, setFormData] = useState({ username: '', email: '', password: '', sponsorUsername: referrer || '', packageName: '' });
+
+  useEffect(() => {
+    if (referrer) {
+      setFormData(prev => ({ ...prev, sponsorUsername: referrer }));
+    }
+  }, [referrer]);
+
   const [register, { isLoading, error }] = useRegisterMutation();
   const { isLoading: isLoadingPackages, data: packages = [] } = useGetPackagesQuery(false);
   const { data: settings } = useGetSettingsQuery();
@@ -180,10 +188,11 @@ const Register = () => {
                 <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Sponsor (Optional)</label>
                 <input
                   type="text"
-                  className="w-full bg-slate-900/50 border border-slate-700 text-white px-5 py-3 rounded-xl focus:outline-none focus:border-teal-500 transition-all placeholder:text-slate-600"
+                  className={`w-full bg-slate-900/50 border border-slate-700 text-white px-5 py-3 rounded-xl focus:outline-none focus:border-teal-500 transition-all placeholder:text-slate-600 ${referrer ? 'opacity-50 cursor-not-allowed' : ''}`}
                   placeholder="Sponsor username"
                   value={formData.sponsorUsername}
                   onChange={(e) => setFormData({ ...formData, sponsorUsername: e.target.value })}
+                  disabled={!!referrer}
                 />
               </div>
 

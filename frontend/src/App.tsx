@@ -47,6 +47,7 @@ function App() {
         <Route path="/" element={<LandingPage />} /> {/* Root is now Landing */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/ref/:username" element={<Register />} />
         <Route path="/store" element={<PublicShopPage />} />
 
         {/* Protected Dashboard Routes */}

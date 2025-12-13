@@ -181,9 +181,9 @@ const DashboardHome = () => {
 
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-3 bg-white/10 p-1.5 rounded-lg border border-white/20 backdrop-blur-sm">
-                <code className="px-3 py-1 font-mono text-sm select-all">https://mlm.app/ref/{user?.username}</code>
+                <code className="px-3 py-1 font-mono text-sm select-all">{import.meta.env.VITE_FRONTEND_URL || window.location.origin}/ref/{user?.username}</code>
                 <button
-                  onClick={() => { navigator.clipboard.writeText(`https://mlm.app/ref/${user?.username}`); showAlert('Copied!', 'success'); }}
+                  onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/ref/${user?.username}`); showAlert('Copied!', 'success'); }}
                   className="bg-white text-teal-600 px-3 py-1.5 rounded font-bold text-xs hover:bg-teal-50 transition"
                 >
                   Copy

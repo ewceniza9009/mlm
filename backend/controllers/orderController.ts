@@ -129,7 +129,7 @@ export const createOrder = async (req: Request, res: Response) => {
         if (orderStatus === 'PAID') {
             // 5b. Activate User
             if (userId) {
-                await activateUser(userId);
+                await activateUser(userId, totalAmount);
             }
 
             // 6. Commission & Profit Distribution
@@ -253,7 +253,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             if (order.userId) {
                 const userId = order.userId.toString();
                 // 1. Activate User
-                await activateUser(userId);
+                await activateUser(userId, order.totalAmount);
 
                 // 2. Propagate PV
                 await CommissionEngine.updateUplinePV(userId, order.totalPV);

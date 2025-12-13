@@ -243,10 +243,17 @@ export class CommissionEngine {
       const parent = await User.findById(currentUser.parentId);
       if (!parent) break;
 
+      console.log(`[CommissionEngine] Propagating ${pvAmount} PV from ${currentUser.username} to parent ${parent.username}`);
+      console.log(`[CommissionEngine] Parent Left: ${parent.leftChildId}, Right: ${parent.rightChildId}`);
+
       if (parent.leftChildId && parent.leftChildId.toString() === currentUser._id.toString()) {
-        parent.currentLeftPV += pvAmount;
+        console.log(`[CommissionEngine] Adding to Left PV of ${parent.username}`);
+        parent.currentLeftPV = (parent.currentLeftPV || 0) + pvAmount;
       } else if (parent.rightChildId && parent.rightChildId.toString() === currentUser._id.toString()) {
-        parent.currentRightPV += pvAmount;
+        console.log(`[CommissionEngine] Adding to Right PV of ${parent.username}`);
+        parent.currentRightPV = (parent.currentRightPV || 0) + pvAmount;
+      } else {
+        console.warn(`[CommissionEngine] WARNING: ${currentUser.username} thinks ${parent.username} is parent, but parent does not link back correctly!`);
       }
 
       await parent.save();

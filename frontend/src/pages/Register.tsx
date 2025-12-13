@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRegisterMutation, useGetPackagesQuery } from '../store/api';
+import { useRegisterMutation, useGetPackagesQuery, useGetSettingsQuery } from '../store/api';
 import { useNavigate, Link } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 
@@ -9,12 +9,14 @@ const Register = () => {
   const { showAlert } = useUI();
   const [formData, setFormData] = useState({ username: '', email: '', password: '', sponsorUsername: '', packageName: '' });
   const [register, { isLoading, error }] = useRegisterMutation();
-  const { data: packages = [], isLoading: isLoadingPackages } = useGetPackagesQuery(false); // false = only active
+  const { isLoading: isLoadingPackages, data: packages = [] } = useGetPackagesQuery(false);
+  const { data: settings } = useGetSettingsQuery();
+  const isShopFirst = settings?.shopFirstEnrollment === true;
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.packageName) {
+    if (!formData.packageName && !isShopFirst) {
       showAlert("Please select a package", 'warning');
       return;
     }
@@ -24,13 +26,6 @@ const Register = () => {
       showAlert('Registration successful! Please login.', 'success');
     } catch (err) {
       console.error('Failed to register', err);
-      // Determine if we should show alert here or rely on the error message rendered in JSX
-      // The original code rendered error in JSX (line 120) AND logged to console.
-      // It didn't actually alert on error (except for package selection). 
-      // I added a success alert which is good.
-      // I will keep the console error but maybe add an error toast too? 
-      // The JSX error display is good for form feedback. I'll stick to that for persistent error, 
-      // but a toast is immediate feedback. I'll add a toast for generic failure.
       showAlert('Registration failed. Please check the form.', 'error');
     }
   };
@@ -72,51 +67,60 @@ const Register = () => {
 
 
           {/* Package Selection */}
-          <div className="grid gap-4">
-            {isLoadingPackages ? (
-              <div className="text-gray-400">Loading packages...</div>
-            ) : packages.map((pkg: any) => (
-              <div
-                key={pkg._id}
-                onClick={() => setFormData({ ...formData, packageName: pkg.name })}
-                className={`relative p-6 rounded-2xl border cursor-pointer transition-all duration-300 group
+          {!isShopFirst ? (
+            <div className="grid gap-4">
+              {isLoadingPackages ? (
+                <div className="text-gray-400">Loading packages...</div>
+              ) : packages.map((pkg: any) => (
+                <div
+                  key={pkg._id}
+                  onClick={() => setFormData({ ...formData, packageName: pkg.name })}
+                  className={`relative p-6 rounded-2xl border cursor-pointer transition-all duration-300 group
                         ${formData.packageName === pkg.name
-                    ? 'bg-white/10 border-teal-500 lg:scale-105 shadow-xl shadow-teal-500/20'
-                    : 'bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10'
-                  }
+                      ? 'bg-white/10 border-teal-500 lg:scale-105 shadow-xl shadow-teal-500/20'
+                      : 'bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10'
+                    }
                     `}
-              >
-                {formData.packageName === pkg.name && (
-                  <div className="absolute -top-3 -right-3 bg-teal-500 text-white p-1 rounded-full shadow-lg">
-                    <CheckCircle size={20} fill="currentColor" className="text-teal-500 bg-white rounded-full" />
-                  </div>
-                )}
-                {pkg.badge && (
-                  <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 px-2 py-1 rounded-md border border-purple-500/30">
-                    {pkg.badge}
-                  </span>
-                )}
+                >
+                  {formData.packageName === pkg.name && (
+                    <div className="absolute -top-3 -right-3 bg-teal-500 text-white p-1 rounded-full shadow-lg">
+                      <CheckCircle size={20} fill="currentColor" className="text-teal-500 bg-white rounded-full" />
+                    </div>
+                  )}
+                  {pkg.badge && (
+                    <span className="absolute top-4 right-4 text-[10px] font-bold uppercase tracking-wider bg-purple-500/20 text-purple-300 px-2 py-1 rounded-md border border-purple-500/30">
+                      {pkg.badge}
+                    </span>
+                  )}
 
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-bold text-white group-hover:text-teal-300 transition-colors">{pkg.name}</h3>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-teal-400">${pkg.price}</div>
-                    <div className="text-xs text-slate-400 font-mono">{pkg.pv} PV</div>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-bold text-white group-hover:text-teal-300 transition-colors">{pkg.name}</h3>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-teal-400">${pkg.price}</div>
+                      <div className="text-xs text-slate-400 font-mono">{pkg.pv} PV</div>
+                    </div>
                   </div>
+                  <p className="text-sm text-slate-400 mb-4 line-clamp-2">{pkg.description}</p>
+                  {pkg.features && pkg.features.length > 0 && (
+                    <ul className="space-y-1">
+                      {pkg.features.slice(0, 3).map((feat: string, i: number) => (
+                        <li key={i} className="text-xs text-slate-300 flex items-center gap-2">
+                          <div className="w-1 h-1 rounded-full bg-teal-500"></div> {feat}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
-                <p className="text-sm text-slate-400 mb-4 line-clamp-2">{pkg.description}</p>
-                {pkg.features && pkg.features.length > 0 && (
-                  <ul className="space-y-1">
-                    {pkg.features.slice(0, 3).map((feat: string, i: number) => (
-                      <li key={i} className="text-xs text-slate-300 flex items-center gap-2">
-                        <div className="w-1 h-1 rounded-full bg-teal-500"></div> {feat}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white/5 border border-white/10 p-6 rounded-2xl">
+              <h3 className="text-xl font-bold text-white mb-2">Shop First Membership</h3>
+              <p className="text-slate-400">
+                Create your account now and select your products later from the shop to activate your membership.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Right Side: Register Form */}
@@ -126,7 +130,7 @@ const Register = () => {
 
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-1">Create Account</h2>
-              <p className="text-slate-400 text-sm">Finishing steps for {formData.packageName ? <span className="text-teal-400 font-bold">{formData.packageName}</span> : 'new member'}</p>
+              <p className="text-slate-400 text-sm">Finishing steps for {isShopFirst ? 'registration' : (formData.packageName ? <span className="text-teal-400 font-bold">{formData.packageName}</span> : 'new member')}</p>
             </div>
 
             {error && (

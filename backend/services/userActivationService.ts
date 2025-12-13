@@ -11,7 +11,7 @@ import { CommissionEngine } from './CommissionEngine';
  * Activates a user, finalized their enrollment, and places them in the network
  * (unless Holding Tank is enabled).
  */
-export const activateUser = async (userId: string): Promise<void> => {
+export const activateUser = async (userId: string, activatorOrderAmount: number = 0): Promise<void> => {
     try {
         const user = await User.findById(userId);
         if (!user) throw new Error('User not found');
@@ -60,15 +60,37 @@ export const activateUser = async (userId: string): Promise<void> => {
             savedUser = await spilloverService.placeUser(user as any, sponsor.id);
 
             // Trigger Bonuses
-            const pkg = await Package.findById(user.enrollmentPackage);
-            const pkgPrice = pkg ? pkg.price : 0;
+            let baseAmount = 0;
+            let pvAmount = 0;
+
+            if (activatorOrderAmount) {
+                // SHOP FIRST ACTIVATION
+                // Triggered by Order Payment.
+                // We use the Order Amount for the Referral Bonus.
+                // We set PV to 0 here because the Order Controller handles the Product PV separately.
+                console.log(`[ActivateUser] Shop First: Using Order Amount $${activatorOrderAmount} as base. Ignoring Package PV to prevent double-counting.`);
+                baseAmount = activatorOrderAmount;
+                pvAmount = 0;
+            } else if (user.enrollmentPackage) {
+                // PACKAGE INCLUDED ACTIVATION
+                // Triggered by legacy registration with package
+                const pkg = await Package.findById(user.enrollmentPackage);
+                if (pkg) {
+                    baseAmount = pkg.price;
+                    pvAmount = pkg.pv;
+                }
+            } else {
+                console.warn('[ActivateUser] No Package and No Order Amount. Activation might be incomplete.');
+            }
 
             // Distribute Direct Referral Bonus
-            await CommissionEngine.distributeReferralBonus(sponsor.id, savedUser._id.toString(), pkgPrice);
+            if (baseAmount > 0) {
+                await CommissionEngine.distributeReferralBonus(sponsor.id, savedUser._id.toString(), baseAmount);
+            }
 
-            // Distribute PV
-            if (pkg && pkg.pv) {
-                await CommissionEngine.updateUplinePV(savedUser._id.toString(), pkg.pv);
+            // Distribute PV (Only if from Package - Product PV is handled by Order Controller)
+            if (pvAmount > 0) {
+                await CommissionEngine.updateUplinePV(savedUser._id.toString(), pvAmount);
             }
         } else {
             // No Sponsor (Root)

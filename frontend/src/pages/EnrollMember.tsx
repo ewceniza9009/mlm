@@ -2,16 +2,18 @@
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { useRegisterMutation, useLazySearchDownlineQuery, useGetPackagesQuery } from '../store/api';
+import { useRegisterMutation, useLazySearchDownlineQuery, useGetPackagesQuery, useGetSettingsQuery } from '../store/api';
 import React, { useState, useEffect, useRef } from 'react';
-import { UserPlus, ArrowLeft, CheckCircle, AlertCircle, Search, Package } from 'lucide-react';
+import { UserPlus, ArrowLeft, CheckCircle, AlertCircle, Package } from 'lucide-react';
 
 const EnrollMember = () => {
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const [registerUser, { isLoading }] = useRegisterMutation();
-  const [triggerSearch, { data: searchResults, isFetching: isSearching }] = useLazySearchDownlineQuery();
+  const [triggerSearch, { data: searchResults }] = useLazySearchDownlineQuery();
   const { data: packages = [] } = useGetPackagesQuery(false); // Only active packages
+  const { data: settings } = useGetSettingsQuery();
+  const isShopFirst = settings?.shopFirstEnrollment === true;
 
   const [formData, setFormData] = useState({
     username: '',
@@ -55,12 +57,12 @@ const EnrollMember = () => {
     }
   }, [currentUser]);
 
-  // Auto-select first package if available and none selected
+  // Auto-select first package if available and none selected (ONLY IF NOT SHOP FIRST)
   useEffect(() => {
-    if (packages.length > 0 && !formData.packageName) {
+    if (!isShopFirst && packages.length > 0 && !formData.packageName) {
       setFormData(prev => ({ ...prev, packageName: packages[0].name }));
     }
-  }, [packages]);
+  }, [packages, isShopFirst]);
 
   const [error, setError] = useState('');
 
@@ -77,7 +79,7 @@ const EnrollMember = () => {
       return;
     }
 
-    if (!formData.packageName) {
+    if (!formData.packageName && !isShopFirst) {
       setError("Please select a package.");
       return;
     }
@@ -92,7 +94,8 @@ const EnrollMember = () => {
         packageName: formData.packageName
       }).unwrap();
 
-      navigate('/');
+      // Redirect to Network page to see the new member
+      navigate('/dashboard/network');
     } catch (err: any) {
       setError(err.data?.message || 'Enrollment failed');
     }
@@ -101,7 +104,7 @@ const EnrollMember = () => {
   return (
     <div className="max-w-4xl mx-auto">
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/dashboard')}
         className="flex items-center space-x-2 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft size={20} />
@@ -185,37 +188,49 @@ const EnrollMember = () => {
           </div>
 
           {/* Package Selection Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-2">2. Select Package</h3>
+          {!isShopFirst ? (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-slate-700 pb-2">2. Select Package</h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-              {packages.map((pkg: any) => (
-                <div
-                  key={pkg._id}
-                  onClick={() => setFormData({ ...formData, packageName: pkg.name })}
-                  className={`cursor-pointer border rounded-xl p-4 transition-all relative
-                            ${formData.packageName === pkg.name
-                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-500'
-                      : 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 hover:border-gray-300 dark:hover:border-slate-600'
-                    }
-                        `}
-                >
-                  {formData.packageName === pkg.name && (
-                    <div className="absolute top-2 right-2 text-teal-600 dark:text-teal-400">
-                      <CheckCircle size={18} fill="currentColor" className="text-teal-500 bg-white dark:bg-transparent rounded-full" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                {packages.map((pkg: any) => (
+                  <div
+                    key={pkg._id}
+                    onClick={() => setFormData({ ...formData, packageName: pkg.name })}
+                    className={`cursor-pointer border rounded-xl p-4 transition-all relative
+                              ${formData.packageName === pkg.name
+                        ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20 ring-1 ring-teal-500'
+                        : 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 hover:border-gray-300 dark:hover:border-slate-600'
+                      }
+                          `}
+                  >
+                    {formData.packageName === pkg.name && (
+                      <div className="absolute top-2 right-2 text-teal-600 dark:text-teal-400">
+                        <CheckCircle size={18} fill="currentColor" className="text-teal-500 bg-white dark:bg-transparent rounded-full" />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mb-2">
+                      <Package size={18} className="text-gray-400" />
+                      <span className="font-bold text-gray-900 dark:text-white">{pkg.name}</span>
                     </div>
-                  )}
-                  <div className="flex items-center gap-2 mb-2">
-                    <Package size={18} className="text-gray-400" />
-                    <span className="font-bold text-gray-900 dark:text-white">{pkg.name}</span>
+                    <div className="text-2xl font-bold text-teal-600 dark:text-teal-400 mb-1">${pkg.price}</div>
+                    <div className="text-xs text-gray-500 dark:text-slate-400 font-mono mb-2">{pkg.pv} PV</div>
+                    <p className="text-xs text-gray-600 dark:text-slate-400 line-clamp-2">{pkg.description}</p>
                   </div>
-                  <div className="text-2xl font-bold text-teal-600 dark:text-teal-400 mb-1">${pkg.price}</div>
-                  <div className="text-xs text-gray-500 dark:text-slate-400 font-mono mb-2">{pkg.pv} PV</div>
-                  <p className="text-xs text-gray-600 dark:text-slate-400 line-clamp-2">{pkg.description}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="p-4 bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl flex items-start gap-3">
+              <CheckCircle className="text-teal-500 mt-0.5" size={20} />
+              <div>
+                <h3 className="text-sm font-bold text-teal-800 dark:text-teal-300">Shop First Mode Enabled</h3>
+                <p className="text-xs text-teal-600 dark:text-teal-400 mt-1">
+                  New member will be placed in <strong>Pending Payment</strong> status. They must purchase products from the shop to activate their position.
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="pt-4 border-t border-gray-200 dark:border-slate-700">
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
@@ -275,8 +290,8 @@ const EnrollMember = () => {
             </div>
           </div>
         </form>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

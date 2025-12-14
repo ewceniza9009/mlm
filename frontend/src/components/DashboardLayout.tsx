@@ -9,12 +9,12 @@ import {
   X,
   Users,
   MessageSquare,
-  ChevronDown,
   ChevronRight,
   Package,
   CreditCard,
   FileText,
-  Heart
+  Heart,
+  HelpCircle
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../store/authSlice';
@@ -64,6 +64,7 @@ const DashboardLayout = () => {
       { icon: Package, label: 'My Orders', path: '/dashboard/shop/orders' }
     ] : []),
     { icon: MessageSquare, label: 'Support', path: '/dashboard/support' },
+    { icon: HelpCircle, label: 'Help Center', path: '/dashboard/help' },
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
   ].filter(item => {
     if (user?.status === 'pending_payment') {

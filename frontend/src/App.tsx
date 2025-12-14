@@ -34,6 +34,11 @@ import AdminSettingsPage from './pages/AdminSettingsPage';
 import AdminProductsPage from './pages/AdminProductsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 
+// Help & Resources
+import HelpPage from './pages/HelpPage';
+import DocumentationPage from './pages/DocumentationPage';
+import FAQPage from './pages/FAQPage';
+
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
   const token = useSelector((state: RootState) => state.auth.token);
   return token ? children : <Navigate to="/login" />;
@@ -70,6 +75,9 @@ function App() {
           <Route path="shop/wishlist" element={<WishlistPage />} />
           <Route path="settings" element={<Settings />} />
           <Route path="support" element={<SupportPage />} />
+          <Route path="help" element={<HelpPage />} />
+          <Route path="documentation" element={<DocumentationPage />} />
+          <Route path="faq" element={<FAQPage />} />
 
           {/* Admin Routes */}
           <Route path="admin" element={<AdminDashboard />} />

@@ -110,7 +110,11 @@ const NetworkNodeModal: React.FC<NetworkNodeModalProps> = ({ memberId, onClose }
                                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                             <Activity size={14} /> Performance Volume
                                         </h3>
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800/30 text-center">
+                                                <div className="text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase mb-1">Personal PV</div>
+                                                <div className="text-xl font-bold text-slate-800 dark:text-white">{(member?.stats?.personalPV || 0).toLocaleString()}</div>
+                                            </div>
                                             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800/30 text-center">
                                                 <div className="text-blue-600 dark:text-blue-400 text-xs font-bold uppercase mb-1">Left PV</div>
                                                 <div className="text-xl font-bold text-slate-800 dark:text-white">{(member?.stats?.currentLeftPV || 0).toLocaleString()}</div>

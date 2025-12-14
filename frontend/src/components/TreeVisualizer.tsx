@@ -33,7 +33,7 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
     const isOnline = nodeDatum.attributes?.active;
 
     return (
-      <foreignObject width="260" height="150" x="-130" y="-75">
+      <foreignObject width="260" height="200" x="-130" y="-100">
         <div
           className={`relative bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden border-t-4 ${rankColor} border-r border-b border-l border-gray-100 dark:border-slate-600 h-full group`}
         >
@@ -63,18 +63,29 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
             </div>
 
             {/* Stats Row */}
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-2 text-center group-hover:bg-teal-50 dark:group-hover:bg-teal-500/10 transition-colors">
-                <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-400 mb-0.5">Left PV</p>
-                <p className="text-sm font-bold text-gray-700 dark:text-gray-200 group-hover:text-teal-600 dark:group-hover:text-teal-400">
-                  {nodeDatum.attributes?.leftPV || 0}
+            <div className="mt-3 space-y-2">
+              {/* Personal PV */}
+              <div className="bg-blue-50 dark:bg-blue-900/10 rounded-lg p-1.5 text-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/20 transition-colors">
+                <p className="text-[9px] uppercase tracking-widest text-blue-500 dark:text-blue-400 mb-0.5">Personal PV</p>
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                  {nodeDatum.attributes?.personalPV || 0}
                 </p>
               </div>
-              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-2 text-center group-hover:bg-purple-50 dark:group-hover:bg-purple-500/10 transition-colors">
-                <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-400 mb-0.5">Right PV</p>
-                <p className="text-sm font-bold text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
-                  {nodeDatum.attributes?.rightPV || 0}
-                </p>
+
+              {/* Legs PV */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-2 text-center group-hover:bg-teal-50 dark:group-hover:bg-teal-500/10 transition-colors">
+                  <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-400 mb-0.5">Left PV</p>
+                  <p className="text-sm font-bold text-gray-700 dark:text-gray-200 group-hover:text-teal-600 dark:group-hover:text-teal-400">
+                    {nodeDatum.attributes?.leftPV || 0}
+                  </p>
+                </div>
+                <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-2 text-center group-hover:bg-purple-50 dark:group-hover:bg-purple-500/10 transition-colors">
+                  <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-400 mb-0.5">Right PV</p>
+                  <p className="text-sm font-bold text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                    {nodeDatum.attributes?.rightPV || 0}
+                  </p>
+                </div>
               </div>
             </div>
 

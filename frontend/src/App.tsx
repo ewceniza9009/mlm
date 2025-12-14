@@ -37,6 +37,7 @@ import AdminOrdersPage from './pages/AdminOrdersPage';
 // Help & Resources
 import HelpPage from './pages/HelpPage';
 import DocumentationPage from './pages/DocumentationPage';
+import SimulationPage from './pages/SimulationPage';
 import FAQPage from './pages/FAQPage';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
@@ -78,6 +79,7 @@ function App() {
           <Route path="help" element={<HelpPage />} />
           <Route path="documentation" element={<DocumentationPage />} />
           <Route path="faq" element={<FAQPage />} />
+          <Route path="simulation" element={<SimulationPage />} />
 
           {/* Admin Routes */}
           <Route path="admin" element={<AdminDashboard />} />

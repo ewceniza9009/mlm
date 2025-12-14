@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import TreeVisualizer from '../components/TreeVisualizer';
 import StatsCard from '../components/StatsCard';
-import { DollarSign, Users, TrendingUp, Activity, ChevronUp, ChevronDown, UserCheck } from 'lucide-react';
+import { DollarSign, Users, TrendingUp, Activity, ChevronUp, ChevronDown, UserCheck, ShoppingBag } from 'lucide-react';
 
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
@@ -14,16 +14,6 @@ import { useUI } from '../components/UIContext';
 const DashboardHome = () => {
   const { showAlert } = useUI();
   const user = useSelector((state: RootState) => state.auth.user);
-  // ... (rest of the code)
-
-  // Note: I will only replace the specific block involving the alert.
-  // However, I need to inject `const { showAlert } = useUI();` at the top of the component.
-  // replace_file_content requires me to replace a contiguous block.
-  // If I cannot add the hook easily without replacing the whole file header, I might need to do it in two steps or a larger block.
-  // Let's try to do it in two chunks? No, replace_file_content allows SINGLE contiguous block.
-  // Wait, I can use multi_replace_file_content for non-contiguous edits.
-  // Yes, that is the correct tool. I will use multi_replace.
-
 
   // Fetch Sponsor Details
   const { data: sponsorDetails, isLoading: sponsorLoading } = useGetMemberDetailsQuery(user?.sponsorId, { skip: !user?.sponsorId });
@@ -40,7 +30,10 @@ const DashboardHome = () => {
   // Use fresh data if available, fallback to Redux state
   const currentRank = myDetails?.profile?.rank || user?.rank || 'Member';
   const leftPV = myDetails?.stats?.currentLeftPV ?? user?.currentLeftPV ?? 0;
+
   const rightPV = myDetails?.stats?.currentRightPV ?? user?.currentRightPV ?? 0;
+  // @ts-ignore
+  const personalPV = myDetails?.stats?.personalPV ?? user?.personalPV ?? 0;
 
   // Fetch Tree Data for Dashboard
   const { data: treeData, isLoading: treeLoading, error: treeError } = useGetTreeQuery(user?.id);
@@ -78,7 +71,7 @@ const DashboardHome = () => {
         <div className="space-y-6 shrink-0 animation-fade-in">
 
           {/* 1. Key Metrics Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-6">
             <StatsCard
               title="Total Earnings"
               value={`$${wallet?.balance?.toFixed(2) || '0.00'}`}
@@ -98,6 +91,13 @@ const DashboardHome = () => {
               value={`${leftPV} / ${rightPV}`}
               icon={Activity}
               trend="Live"
+              trendUp={true}
+            />
+            <StatsCard
+              title="Personal PV"
+              value={personalPV}
+              icon={ShoppingBag}
+              trend="Your Volume"
               trendUp={true}
             />
             <StatsCard

@@ -91,6 +91,7 @@ export const activateUser = async (userId: string, activatorOrderAmount: number 
             // Distribute PV (Only if from Package - Product PV is handled by Order Controller)
             if (pvAmount > 0) {
                 await CommissionEngine.updateUplinePV(savedUser._id.toString(), pvAmount);
+                await CommissionEngine.addPersonalPV(savedUser._id.toString(), pvAmount);
             }
         } else {
             // No Sponsor (Root)

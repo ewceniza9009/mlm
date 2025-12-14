@@ -154,6 +154,7 @@ export const createOrder = async (req: Request, res: Response) => {
 
                 // B. Propagate PV
                 await CommissionEngine.updateUplinePV(beneficiaryId, totalPV);
+                await CommissionEngine.addPersonalPV(beneficiaryId, totalPV);
             }
         }
 
@@ -257,6 +258,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
                 // 2. Propagate PV
                 await CommissionEngine.updateUplinePV(userId, order.totalPV);
+                await CommissionEngine.addPersonalPV(userId, order.totalPV);
             }
         }
 

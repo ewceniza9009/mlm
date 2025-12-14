@@ -35,7 +35,7 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
     return (
       <foreignObject width="260" height="150" x="-130" y="-75">
         <div
-          className={`relative bg-white dark:bg-[#1a1b23] rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden border-t-4 ${rankColor} border-r border-b border-l border-gray-100 dark:border-white/5 h-full group`}
+          className={`relative bg-white dark:bg-slate-800 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden border-t-4 ${rankColor} border-r border-b border-l border-gray-100 dark:border-slate-600 h-full group`}
         >
           {/* Main Click Area for Toggling */}
           <div className="absolute inset-0 z-0 cursor-pointer" onClick={toggleNode} title="Click to Expand/Collapse"></div>
@@ -48,7 +48,7 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
                   {nodeDatum.name.substring(0, 1).toUpperCase()}
                 </div>
                 {isOnline && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-[#1a1b23] rounded-full"></div>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
                 )}
               </div>
 
@@ -56,7 +56,7 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
                 <h3 className="font-bold text-gray-900 dark:text-white text-sm truncate w-32 leading-tight">
                   {nodeDatum.name}
                 </h3>
-                <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-slate-500 uppercase mt-0.5">
+                <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-slate-400 uppercase mt-0.5">
                   {rank || 'Member'}
                 </p>
               </div>
@@ -64,14 +64,14 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
 
             {/* Stats Row */}
             <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-2 text-center group-hover:bg-teal-50 dark:group-hover:bg-teal-500/10 transition-colors">
-                <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-0.5">Left PV</p>
+              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-2 text-center group-hover:bg-teal-50 dark:group-hover:bg-teal-500/10 transition-colors">
+                <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-400 mb-0.5">Left PV</p>
                 <p className="text-sm font-bold text-gray-700 dark:text-gray-200 group-hover:text-teal-600 dark:group-hover:text-teal-400">
                   {nodeDatum.attributes?.leftPV || 0}
                 </p>
               </div>
-              <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-2 text-center group-hover:bg-purple-50 dark:group-hover:bg-purple-500/10 transition-colors">
-                <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-500 mb-0.5">Right PV</p>
+              <div className="bg-gray-50 dark:bg-slate-700/50 rounded-lg p-2 text-center group-hover:bg-purple-50 dark:group-hover:bg-purple-500/10 transition-colors">
+                <p className="text-[9px] uppercase tracking-widest text-gray-400 dark:text-slate-400 mb-0.5">Right PV</p>
                 <p className="text-sm font-bold text-gray-700 dark:text-gray-200 group-hover:text-purple-600 dark:group-hover:text-purple-400">
                   {nodeDatum.attributes?.rightPV || 0}
                 </p>
@@ -80,7 +80,7 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
 
             {/* Total Earned Badge (Floating) */}
             <div className="absolute top-2 right-2 pointer-events-auto">
-              <span className="inline-flex items-center px-2 py-1 rounded bg-green-50 dark:bg-green-500/10 text-[10px] font-bold text-green-700 dark:text-green-400">
+              <span className="inline-flex items-center px-2 py-1 rounded bg-green-50 dark:bg-green-500/20 text-[10px] font-bold text-green-700 dark:text-green-400">
                 ${(nodeDatum.attributes?.totalEarned || 0).toLocaleString()}
               </span>
             </div>
@@ -127,7 +127,7 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
         orientation="vertical"
         renderCustomNodeElement={renderForeignObjectNode}
         nodeSize={{ x: 300, y: 250 }} // Increased spacing to prevent overlap
-        pathClassFunc={() => 'stroke-gray-400 dark:stroke-slate-600 !stroke-2'}
+        pathClassFunc={() => 'stroke-gray-400 dark:stroke-slate-400 !stroke-2'}
         separation={{ siblings: 1.5, nonSiblings: 2 }}
         zoom={0.6}
         scaleExtent={{ min: 0.1, max: 2 }}

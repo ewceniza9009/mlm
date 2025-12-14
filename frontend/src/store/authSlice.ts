@@ -30,6 +30,7 @@ interface User {
   };
   currentLeftPV: number;
   currentRightPV: number;
+  personalPV: number;
   enrollmentDate: string;
   spilloverPreference?: string;
   enableHoldingTank?: 'system' | 'enabled' | 'disabled';

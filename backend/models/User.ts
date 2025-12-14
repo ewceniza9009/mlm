@@ -52,6 +52,7 @@ export interface IUser extends Document {
   rank: 'Bronze' | 'Silver' | 'Gold' | 'Diamond';
   isPlaced: boolean;
   wishlist?: mongoose.Types.ObjectId[];
+  personalPV: number;
 }
 
 const userSchema = new Schema<IUser>({
@@ -91,6 +92,7 @@ const userSchema = new Schema<IUser>({
   isPlaced: { type: Boolean, default: true }, // Default true for legacy/immediate placement
   currentLeftPV: { type: Number, default: 0 },
   currentRightPV: { type: Number, default: 0 },
+  personalPV: { type: Number, default: 0 },
   enrollmentDate: { type: Date, default: Date.now },
 
   // Genealogy Pointers

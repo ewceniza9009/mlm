@@ -195,7 +195,8 @@ export const login = async (req: Request, res: Response) => {
         parentId: user.parentId,
         rank: user.rank,
         currentLeftPV: user.currentLeftPV,
-        currentRightPV: user.currentRightPV
+        currentRightPV: user.currentRightPV,
+        personalPV: user.personalPV
       }
     });
 

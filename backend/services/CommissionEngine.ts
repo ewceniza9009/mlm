@@ -266,6 +266,17 @@ export class CommissionEngine {
     console.log(`[CommissionEngine] PV Propagated: ${pvAmount} PV up the tree line.`);
   }
 
+  // 6. Add Personal PV (Tracking only)
+  static async addPersonalPV(userId: string, pvAmount: number) {
+    if (pvAmount <= 0) return;
+    const user = await User.findById(userId);
+    if (!user) return;
+
+    user.personalPV = (user.personalPV || 0) + pvAmount;
+    await user.save();
+    console.log(`[CommissionEngine] Added ${pvAmount} Personal PV to ${user.username}. Total: ${user.personalPV}`);
+  }
+
   // Helper: Credit Wallet
   private static async creditWallet(userId: string, amount: number, type: string, description: string) {
     let wallet = await Wallet.findOne({ userId });

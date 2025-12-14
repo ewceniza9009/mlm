@@ -484,27 +484,29 @@ const CommissionSimulation = () => {
     }, [isPlaying, currentStep, mode]);
 
     return (
-        <div className="space-y-6">
-            {/* Mode Switcher */}
-            <div className="flex justify-center p-1 bg-gray-100 dark:bg-white/5 rounded-xl w-fit mx-auto">
+        <div className="flex flex-col h-auto lg:h-full gap-4 animate-in fade-in duration-500">
+            {/* Mode Switcher - Fixed Height, compact on mobile */}
+            <div className="shrink-0 flex justify-center p-1 bg-gray-100 dark:bg-white/5 rounded-xl w-fit mx-auto">
                 <button
                     onClick={() => setMode('story')}
-                    className={`px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${mode === 'story' ? 'bg-white dark:bg-[#2d2e36] shadow text-teal-600' : 'text-gray-500'}`}
+                    className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-sm font-bold transition-all ${mode === 'story' ? 'bg-white dark:bg-[#2d2e36] shadow text-teal-600' : 'text-gray-500'}`}
                 >
                     Story Guide (Learn)
                 </button>
                 <button
                     onClick={() => setMode('sandbox')}
-                    className={`px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${mode === 'sandbox' ? 'bg-white dark:bg-[#2d2e36] shadow text-indigo-600' : 'text-gray-500'}`}
+                    className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-sm font-bold transition-all ${mode === 'sandbox' ? 'bg-white dark:bg-[#2d2e36] shadow text-indigo-600' : 'text-gray-500'}`}
                 >
                     Sandbox Mode (Experiment)
                 </button>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:h-[700px] h-auto">
+            {/* Main Content Area - Fills remaining space */}
+            <div className="flex-1 lg:min-h-0 flex flex-col lg:flex-row gap-4">
 
-                <div className="flex-1 bg-white dark:bg-[#1a1b23] rounded-2xl border border-gray-200 dark:border-white/5 relative flex flex-col overflow-hidden min-h-[350px] lg:min-h-0">
-                    <div className="p-4 border-b border-gray-200 dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/[0.02]">
+                {/* Left Panel: Simulation Canvas - Takes majority space */}
+                <div className="h-[450px] lg:h-auto lg:flex-1 bg-white dark:bg-[#1a1b23] rounded-2xl border border-gray-200 dark:border-white/5 relative flex flex-col overflow-hidden">
+                    <div className="shrink-0 p-4 border-b border-gray-200 dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/[0.02]">
                         <h2 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                             {mode === 'story' ? <TrendingUp size={20} className="text-teal-500" /> : <Zap size={20} className="text-indigo-500" />}
                             {mode === 'story' ? 'Step-by-Step Scenario' : 'Interactive Sandbox'}
@@ -533,13 +535,13 @@ const CommissionSimulation = () => {
                         )}
                     </div>
 
-                    <div className="flex-1 relative bg-slate-50 dark:bg-[#0f1014]" ref={containerRef}>
+                    <div className="flex-1 relative bg-slate-50 dark:bg-[#0f1014] overflow-hidden" ref={containerRef}>
                         <svg ref={svgRef} className="w-full h-full"></svg>
                     </div>
 
 
                     {mode === 'sandbox' && (
-                        <div className="border-t border-gray-200 dark:border-white/5 p-4 bg-white dark:bg-[#1a1b23]">
+                        <div className="shrink-0 border-t border-gray-200 dark:border-white/5 p-4 bg-white dark:bg-[#1a1b23]">
                             <div className="flex flex-wrap items-center gap-2 lg:gap-4 justify-between">
                                 <span className="text-xs font-bold text-gray-500 uppercase w-full sm:w-auto mb-2 sm:mb-0">Selected: <span className="text-indigo-600">{sandboxNodes.find(n => n.id === selectedNodeId)?.name || 'None'}</span></span>
 
@@ -564,36 +566,40 @@ const CommissionSimulation = () => {
                 </div>
 
 
-                <div className="lg:w-96 flex flex-col gap-4">
+                {/* Right Panel: Controls & Info - Fixed width, vertically responsive */}
+                <div className="lg:w-96 flex flex-col gap-4 h-auto lg:h-full lg:min-h-0">
                     {mode === 'story' ? (
 
-                        <div className="flex-1 bg-white dark:bg-[#1a1b23] rounded-2xl border border-gray-200 dark:border-white/5 p-6 flex flex-col">
-                            <div className="flex items-center gap-2 mb-3">
-                                <div className="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                        <div className="flex-1 bg-white dark:bg-[#1a1b23] rounded-2xl border border-gray-200 dark:border-white/5 p-4 lg:p-6 flex flex-col h-auto lg:h-full lg:min-h-0">
+                            <div className="shrink-0 flex items-center gap-2 mb-2 lg:mb-3">
+                                <div className="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-3 py-1 rounded-full text-[10px] lg:text-xs font-bold uppercase tracking-wider">
                                     Step {currentStep} / {storySteps.length - 1}
                                 </div>
                             </div>
-                            <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">{storySteps[currentStep].title}</h3>
-                            <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 flex-1">{storySteps[currentStep].description}</p>
+                            <h3 className="shrink-0 font-bold text-base lg:text-lg mb-2 lg:mb-4 text-gray-900 dark:text-white leading-tight">{storySteps[currentStep].title}</h3>
+                            <div className="flex-1 lg:overflow-y-auto mb-4 lg:mb-6 pr-2">
+                                <p className="text-gray-600 dark:text-gray-400 text-xs lg:text-sm mb-3 lg:mb-4 leading-relaxed">{storySteps[currentStep].description}</p>
 
-                            <div className="space-y-3 mb-8">
-                                {storySteps[currentStep].breakdown.map((b, i) => (
-                                    <div key={i} className="flex justify-between text-sm p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
-                                        <span className="text-gray-600 dark:text-gray-400">{b.label}</span>
-                                        <span className={`font-bold ${b.color}`}>{b.value}</span>
-                                    </div>
-                                ))}
+                                <div className="space-y-2 lg:space-y-3">
+                                    {storySteps[currentStep].breakdown.map((b, i) => (
+                                        <div key={i} className="flex justify-between text-xs lg:text-sm p-2 lg:p-3 bg-gray-50 dark:bg-white/5 rounded-lg">
+                                            <span className="text-gray-600 dark:text-gray-400">{b.label}</span>
+                                            <span className={`font-bold ${b.color}`}>{b.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            {/* Desktop Buttons (Hidden on Mobile) */}
+                            <div className="shrink-0 hidden lg:grid grid-cols-2 gap-3 mt-auto">
                                 <button onClick={() => setCurrentStep(Math.max(0, currentStep - 1))} disabled={currentStep === 0} className="p-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1b23] text-gray-600 dark:text-gray-300 font-bold text-sm disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-white/5">Previous</button>
                                 <button onClick={() => setCurrentStep(Math.min(storySteps.length - 1, currentStep + 1))} disabled={currentStep === storySteps.length - 1} className="p-3 rounded-xl bg-indigo-600 text-white font-bold text-sm disabled:opacity-50 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2">Next Step <ArrowRight size={16} /></button>
                             </div>
                         </div>
                     ) : (
 
-                        <div className="flex-1 flex flex-col gap-4">
-                            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
+                        <div className="flex-1 flex flex-col gap-4 h-auto lg:h-full lg:min-h-0">
+                            <div className="shrink-0 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white shadow-lg">
                                 <div className="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-2">My Total Earnings</div>
                                 <div className="text-4xl font-black flex items-center gap-1">
                                     <DollarSign size={28} /> {(rootNode?.earnings || 0).toFixed(2)}
@@ -610,8 +616,8 @@ const CommissionSimulation = () => {
                                 </div>
                             </div>
 
-                            <div className="flex-1 bg-white dark:bg-[#1a1b23] rounded-2xl border border-gray-200 dark:border-white/5 p-4 flex flex-col overflow-hidden">
-                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Event Log</h4>
+                            <div className="flex-1 bg-white dark:bg-[#1a1b23] rounded-2xl border border-gray-200 dark:border-white/5 p-4 flex flex-col overflow-hidden min-h-0">
+                                <h4 className="shrink-0 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Event Log</h4>
                                 <div className="flex-1 overflow-y-auto space-y-2 pr-2">
                                     {sandboxLog.map((log, i) => (
                                         <div key={i} className="text-xs p-2 bg-gray-50 dark:bg-white/5 rounded border-l-2 border-indigo-500 text-gray-700 dark:text-gray-300">
@@ -625,6 +631,26 @@ const CommissionSimulation = () => {
                     )}
                 </div>
             </div>
+
+            {/* Mobile Floating Toolbar - Always visible at bottom on mobile */}
+            {mode === 'story' && (
+                <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50 flex gap-2 p-2 bg-white/90 dark:bg-[#1a1b23]/90 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-2xl shadow-xl animate-in slide-in-from-bottom-4 duration-500">
+                    <button
+                        onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                        disabled={currentStep === 0}
+                        className="flex-1 p-3 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-white font-bold text-sm disabled:opacity-30 active:scale-95 transition-all"
+                    >
+                        Previous
+                    </button>
+                    <button
+                        onClick={() => setCurrentStep(Math.min(storySteps.length - 1, currentStep + 1))}
+                        disabled={currentStep === storySteps.length - 1}
+                        className="flex-[2] p-3 rounded-xl bg-indigo-600 text-white font-bold text-sm disabled:opacity-50 shadow-lg shadow-indigo-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
+                        Next Step <ArrowRight size={16} />
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

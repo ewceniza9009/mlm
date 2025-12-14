@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Wallet from '../models/Wallet';
+import User from '../models/User';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { createNotification } from './notificationController';
 import { getSettingValue } from './settingsController';
@@ -92,11 +93,47 @@ export const getMyWallet = async (req: AuthRequest, res: Response) => {
     // Paginate
     const paginatedTxs = filteredTxs.slice((page - 1) * limit, page * limit);
 
+    // Enrich Transactions: Replace User IDs in description with Usernames
+    const referralRegex = /Referral Bonus for new user ([a-f0-9]{24})/;
+    const userIdsToFetch = new Set<string>();
+
+    // Identify IDs to fetch
+    paginatedTxs.forEach((tx: any) => {
+      const match = tx.description.match(referralRegex);
+      if (match && match[1]) {
+        userIdsToFetch.add(match[1]);
+      }
+    });
+
+    let finalTxs = paginatedTxs;
+
+    if (userIdsToFetch.size > 0) {
+      const users = await User.find({ _id: { $in: Array.from(userIdsToFetch) } }).select('username');
+      const userMap = new Map(users.map(u => [u._id.toString(), u.username]));
+
+      finalTxs = paginatedTxs.map((tx: any) => {
+        // Convert to object if it's a mongoose doc to avoid mutation issues or stricter types
+        const simpleTx = tx.toObject ? tx.toObject() : { ...tx };
+        const match = simpleTx.description.match(referralRegex);
+
+        // Always replace "new user" with "recruit" if present, for consistency
+        simpleTx.description = simpleTx.description.replace('new user', 'recruit');
+
+        if (match && match[1]) {
+          const username = userMap.get(match[1]);
+          if (username) {
+            simpleTx.description = simpleTx.description.replace(match[1], username);
+          }
+        }
+        return simpleTx;
+      });
+    }
+
     res.json({
       _id: wallet._id,
       balance: wallet.balance,
       transactions: {
-        data: paginatedTxs,
+        data: finalTxs,
         total,
         page,
         totalPages: Math.ceil(total / limit)

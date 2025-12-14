@@ -21,11 +21,16 @@ export class CommissionEngine {
     if (!wallet) {
       wallet = new Wallet({ userId: sponsor._id, balance: 0 });
     }
+
+    // Get User Name for Description
+    const newUser = await User.findById(newUserId);
+    const newUserName = newUser ? newUser.username : newUserId;
+
     wallet.balance += bonusAmount;
     wallet.transactions.push({
       amount: bonusAmount,
       type: 'COMMISSION',
-      description: `Referral Bonus for new user ${newUserId}`,
+      description: `Referral Bonus for recruit ${newUserName}`,
       date: new Date(),
       status: 'COMPLETED'
     });

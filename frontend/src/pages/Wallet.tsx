@@ -51,7 +51,7 @@ const WalletPage = () => {
     return order === 'asc' ? <ArrowUpDown size={14} className="text-teal-600 rotate-180 transition-transform" /> : <ArrowUpDown size={14} className="text-teal-600 transition-transform" />;
   };
 
-  const getHeaderClass = (field: string) => `px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors select-none ${sortBy === field ? 'text-teal-600 dark:text-teal-400 font-bold bg-gray-50 dark:bg-slate-700/30' : ''}`;
+  const getHeaderClass = (field: string) => `px-6 py-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors select-none ${sortBy === field ? 'text-teal-600 dark:text-teal-400 font-bold' : ''}`;
 
   if (isLoading) return <div className="text-gray-500 dark:text-gray-400 p-6">Loading Wallet...</div>;
 

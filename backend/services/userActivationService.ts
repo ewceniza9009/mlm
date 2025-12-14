@@ -49,19 +49,9 @@ export const activateUser = async (userId: string, activatorOrderAmount: number 
             }
         }
 
-        // 3. FORCE PLACEMENT (Bypass Holding Tank for Shop First Activation)
-        // User Requirement: "REGARDLESS IF THE HOLDING TANK SETTINGS IS ENABLED OR DISABLED... IT WILL AUTOMATICALLY MOVE THE MEMBER... TO THE GENEALOGY TREE"
-        // Update: Now conditional based on shopFirstHoldingTank setting.
-
-        // Import SystemSetting if not already imported (I will add import at top of file separately if needed, but for now I assume I can import or find one way)
-        // Actually, to avoid adding imports in this chunk blindly, let's look at the top of file first.
-        // It's not imported.
-        // I will use dynamic import or assume I will add the import in a previous step. 
-        // Better: I'll use the replace_file_content to add the import first.
-
-        // Wait, I can do it in one go if I'm careful or multiple steps. 
-        // Let's assume I'll add the import first.
-
+        // 3. Resolve Placement Strategy
+        // Check if Shop First Holding Tank is enabled. If so, place in Holding Tank.
+        // Otherwise, move directly to Genealogy Tree (Auto-Place).
         const { getSettingValue } = require('../controllers/settingsController');
         const shopFirstHoldingTank = await getSettingValue('shopFirstHoldingTank', false);
 
@@ -72,12 +62,8 @@ export const activateUser = async (userId: string, activatorOrderAmount: number 
                 // user.status is already active
                 // sponsorId is already set
                 savedUser = await user.save();
-                // Note: we still need to trigger bonuses for activation?
-                // Typically bonuses are paid WHEN placed?
-                // In `placeUserManually` (placementController.ts):
-                // "Trigger Commissions (Bonuses delayed until placement)"
+                // Note: Bonuses are delayed until actual placement (see placeUserManually).
                 // So if we park in Holding Tank, we skip bonuses here.
-                // Correct.
             } else {
                 // force auto place logic
                 console.log('[ActivateUser] Auto-placing in Network...');

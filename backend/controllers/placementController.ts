@@ -53,45 +53,30 @@ export const placeUserManually = async (req: Request, res: Response) => {
             if (position === 'left' && parent.leftChildId) return res.status(400).json({ message: 'Left spot occupied' });
             if (position === 'right' && parent.rightChildId) return res.status(400).json({ message: 'Right spot occupied' });
 
+            // Perform Placement Actions
+            userToPlace.parentId = parent._id as any;
+            userToPlace.position = position as 'left' | 'right';
+            userToPlace.isPlaced = true;
+
+            // Save user first (triggers path/level hooks)
+            const savedUser = await userToPlace.save();
+
+            // Link to Parent
+            if (position === 'left') {
+                parent.leftChildId = savedUser._id as any;
+            } else {
+                parent.rightChildId = savedUser._id as any;
+            }
+            await parent.save();
+
         } else {
             // Auto Spillover (No parent selected)
-            // Use the selected leg ('left' or 'right') as the preference
-            // spilloverService.findPlacement accepts 'left'/'right' as valid preferences for extreme traversal
-
-            // Re-use the existing findPlacement logic but we need to import it properly or use the service
-            // spilloverService is imported as default
-
-            // Wait, spilloverService.placeUser does everything (find + update). 
-            // But here we want to find placement but do the update manually in this controller (to keep commission logic consistent/centralized in this block?)
-            // Or we just call placeUser?
-            // placeUser handles "saving" and "parent linking".
-            // logic below handles "saving" and "parent linking" and "commission triggering".
-            // Ideally we shouldn't duplicate logic.
-
-            // If we use spilloverService keys, we need to pass the user object.
-
-            // Let's resolve the parent ID using spillover logic, then proceed with the existing flow.
-            // We need to access `findPlacement` but it is NOT exported from spilloverService default export. It is local.
-            // Only `placeUser` is exported.
-
-            // Plan B: Call `placeUser` and let it handle everything?
-            // `placeUser` returns the savedUser.
-            // But `placeUser` updates the parent links.
-            // Does `placeUser` trigger commissions?
-            // No, `placeUser` (in spilloverService.ts) only does structural placement. 
-            // It does NOT trigger `CommissionEngine`.
-
-            // So we can use `placeUser` to put them in the tree, and then run the commission logic here.
-
-            // BUT `placeUser` uses `sponsor.spilloverPreference` by default.
-            // 2. AUTO-SPILLOVER FLOW (No parent selected)
-            // Use the selected 'position' (left/right) as the preference override
-            // This will find the extreme bottom of that side (or weaker leg if that matches) - user specifically asked for "DEPENDING ON THE SELECTED LEG"
-            // So we pass 'left' or 'right' literal which works with findPlacement logic (lines 20-25 of spilloverService)
+            // Use the selected leg ('left' or 'right') as the preference to find the extreme bottom.
+            // spilloverService.placeUser handles finding the spot and linking the nodes structurally.
+            // It does NOT trigger commissions, which is handled below in this controller.
 
             userToPlace.isPlaced = true;
-            // Calls the service to find spot and link up
-            await spilloverService.placeUser(userToPlace as any, sponsorId, position); // position is 'left' or 'right'
+            await spilloverService.placeUser(userToPlace as any, sponsorId, position);
         }
 
         const pkg: any = userToPlace.enrollmentPackage;
@@ -127,16 +112,7 @@ export const placeUserManually = async (req: Request, res: Response) => {
             console.log(`[PlaceUser] Rolling up existing Personal PV: ${pvToRollUp}`);
         } else if (pkg && pkg.pv) {
             pvToRollUp = pkg.pv;
-            // Also add to personal if not yet added? 
-            // In Legacy+HoldingTank, activateUser might NOT have added personalPV if it skipped the placement block?
-            // Let's check activateUser.ts...
-            // In activateUser: if (shopFirstHoldingTank) -> just save. NO PV added.
-            // Wait. activateUser ONLY calls addPersonalPV in the "else" (Auto-Place) block?
-            // checking activateUser.ts...
-            // Lines 70-80 (Holding Tank): just saves.
-            // Lines 81+ (Auto Place): adds Personal PV.
-            // ERROR: If Legacy User goes to Holding Tank, they currently get 0 Personal PV until placed.
-            // So we MUST add Personal PV here for them too.
+            // Package Enrolled User: If coming from Holding Tank, they may not have Personal PV yet.
         }
 
         // Trigger Referral Bonus
@@ -148,29 +124,13 @@ export const placeUserManually = async (req: Request, res: Response) => {
         if (pvToRollUp > 0) {
             await CommissionEngine.updateUplinePV(userToPlace._id as any, pvToRollUp);
 
-            // Ensure Personal PV is set (idempotent addition or set?)
-            // updateUplinePV only does uplines.
-            // addPersonalPV adds to personal.
-            // If they already have personalPV (Shop First), we don't want to double add?
-            // CommissionEngine.addPersonalPV ADDS to existing.
-
-            // Case A: Shop First. 
-            // OrderController ran `addPersonalPV`. User has 100 PV.
-            // Here `pvToRollUp` = 100.
-            // If we run `addPersonalPV(100)`, they get 200 PV. WRONG.
-
-            // Case B: Legacy + Holding Tank.
-            // `activateUser` did NOTHING. User has 0 PV.
-            // Here `pvToRollUp` = 100 (from Pkg).
-            // We run `addPersonalPV(100)`. Correct.
-
-            // Check if we need to credit Personal PV
+            // Prevent double counting for users who already have Personal PV.
+            // Only add Personal PV if the user currently has none (e.g., Package Enrollment via Holding Tank).
             const currentPersonalPV = (userToPlace as any).personalPV || 0;
             if (currentPersonalPV === 0 && pkg) {
-                // Legacy Case: Credit Personal PV now
+                // Credit Personal PV for Package Enrollment
                 await CommissionEngine.addPersonalPV(userToPlace._id as any, pvToRollUp);
             }
-            // Logic gap: What if Shop First user has 0 PV (error?) - unlikely if Paid.
         }
 
         res.json({ message: 'User placed successfully' });

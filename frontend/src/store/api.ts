@@ -311,6 +311,9 @@ export const api = createApi({
       query: () => 'settings',
       providesTags: ['Settings'],
     }),
+    getPublicSettings: builder.query<Record<string, any>, void>({
+      query: () => 'settings/public',
+    }),
     updateSetting: builder.mutation<any, { key: string; value: any }>({
       query: (body) => ({
         url: 'settings',
@@ -466,6 +469,7 @@ export const {
   useCreateOrderMutation,
   useGetMyOrdersQuery,
   useGetSettingsQuery,
+  useGetPublicSettingsQuery,
   useUpdateSettingMutation,
   useGetAllUsersQuery,
   useUpdateUserRoleMutation,

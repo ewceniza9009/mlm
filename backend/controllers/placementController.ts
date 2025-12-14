@@ -8,7 +8,7 @@ export const getHoldingTank = async (req: Request, res: Response) => {
         // Find users sponsored by me, who are NOT placed yet
         // @ts-ignore
         const userId = req.user._id;
-        const pendingUsers = await User.find({ sponsorId: userId, isPlaced: false });
+        const pendingUsers = await User.find({ sponsorId: userId, isPlaced: false, status: 'active' });
         res.json(pendingUsers);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching holding tank' });
@@ -24,6 +24,11 @@ export const placeUserManually = async (req: Request, res: Response) => {
         const userToPlace = await User.findById(userId).populate('enrollmentPackage');
         if (!userToPlace || userToPlace.isPlaced) {
             return res.status(400).json({ message: 'User not valid for placement' });
+        }
+
+        // Check if user is active (paid)
+        if (userToPlace.status !== 'active') {
+            return res.status(400).json({ message: 'User is not active (unpaid) and cannot be placed.' });
         }
 
         // Security: Ensure logged in user is the sponsor

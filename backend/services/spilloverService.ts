@@ -56,10 +56,26 @@ const findPlacement = async (sponsorId: string | Types.ObjectId, preference: str
   const leftPV = commission ? commission.leftLegPV + commission.carriedLeftPV : 0;
   const rightPV = commission ? commission.rightLegPV + commission.carriedRightPV : 0;
 
-  if (leftPV <= rightPV) {
+  if (leftPV < rightPV) {
     return traverseToFirstEmpty(sponsor.leftChildId);
-  } else {
+  } else if (rightPV < leftPV) {
     return traverseToFirstEmpty(sponsor.rightChildId);
+  } else {
+    // PV is EQUAL (Tie-Breaker needed)
+    // Common in Shop First (0 vs 0)
+    // Secondary Check: Member Count (Balance the tree structure)
+
+    // We need to count members in each leg to decide
+    // Note: This regex count is expensive for huge trees, but essential for balancing.
+    // Optimization: Store 'leftMemberCount' and 'rightMemberCount' on User model in future.
+    const leftCount = await User.countDocuments({ path: { $regex: `,${sponsor.leftChildId.toString()},` } });
+    const rightCount = await User.countDocuments({ path: { $regex: `,${sponsor.rightChildId.toString()},` } });
+
+    if (leftCount <= rightCount) {
+      return traverseToFirstEmpty(sponsor.leftChildId);
+    } else {
+      return traverseToFirstEmpty(sponsor.rightChildId);
+    }
   }
 };
 

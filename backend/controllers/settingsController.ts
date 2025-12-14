@@ -18,6 +18,23 @@ export const getSettings = async (req: Request, res: Response) => {
     }
 };
 
+// Public settings (safe for unauthenticated users)
+export const getPublicSettings = async (req: Request, res: Response) => {
+    try {
+        const publicKeys = ['shopFirstEnrollment'];
+        const settings = await SystemSetting.find({ key: { $in: publicKeys } });
+
+        const settingsMap: Record<string, any> = {};
+        settings.forEach(s => {
+            settingsMap[s.key] = s.value;
+        });
+
+        res.json(settingsMap);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 // Admin only: Update a setting
 export const updateSetting = async (req: AuthRequest, res: Response) => {
     try {

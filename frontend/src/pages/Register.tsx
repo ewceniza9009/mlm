@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useRegisterMutation, useGetPackagesQuery, useGetSettingsQuery } from '../store/api';
+import { useRegisterMutation, useGetPackagesQuery, useGetPublicSettingsQuery } from '../store/api';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 
@@ -18,7 +18,7 @@ const Register = () => {
 
   const [register, { isLoading, error }] = useRegisterMutation();
   const { isLoading: isLoadingPackages, data: packages = [] } = useGetPackagesQuery(false);
-  const { data: settings } = useGetSettingsQuery();
+  const { data: settings } = useGetPublicSettingsQuery();
   const isShopFirst = settings?.shopFirstEnrollment === true;
   const navigate = useNavigate();
 

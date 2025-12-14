@@ -349,106 +349,122 @@ const CommissionSimulation = () => {
 
     useEffect(() => {
         if (!svgRef.current || !containerRef.current) return;
-        const width = containerRef.current.clientWidth;
-        const height = 500;
-        const svg = d3.select(svgRef.current);
-        svg.selectAll('*').remove();
 
-        // Data source depends on mode
-        let dataToRender: SimulationNode;
-        if (mode === 'story') {
-            const storyState = getStoryState(currentStep);
-            dataToRender = storyState.nodes[0];
-        } else { // sandbox mode
-            dataToRender = sandboxNodes[0];
-        }
+        const updateGraph = () => {
+            if (!svgRef.current || !containerRef.current) return;
 
-        const rootNode = d3.hierarchy(dataToRender);
-        const treeLayout = d3.tree().size([width - 100, height - 150]);
-        const treeData = treeLayout(rootNode as any);
+            // Clear previous
+            const svg = d3.select(svgRef.current);
+            svg.selectAll('*').remove();
 
-        const g = svg.append('g').attr('transform', 'translate(50, 80)');
+            const width = containerRef.current.clientWidth;
+            // Use container height or fallback, ensure min height for layout
+            const containerHeight = containerRef.current.clientHeight || 500;
+            const height = Math.max(containerHeight, 400);
 
-        // Links
-        g.selectAll('.link')
-            .data(treeData.links())
-            .enter()
-            .append('path')
-            .attr('class', 'link')
-            .attr('d', d3.linkVertical()
-                .x((d: any) => d.x)
-                .y((d: any) => d.y) as any
-            )
-            .attr('fill', 'none')
-            .attr('stroke', '#cbd5e1')
-            .attr('stroke-width', 2)
-            .attr('stroke-dasharray', (d: any) => d.target.data.isSpillover ? '5,5' : '0'); // Dashed for spillover placement
+            // Data source depends on mode
+            let dataToRender: SimulationNode;
+            if (mode === 'story') {
+                const storyState = getStoryState(currentStep);
+                dataToRender = storyState.nodes[0];
+            } else { // sandbox mode
+                dataToRender = sandboxNodes[0];
+            }
 
-        // Nodes
-        const nodeGroup = g.selectAll('.node')
-            .data(treeData.descendants())
-            .enter()
-            .append('g')
-            .attr('class', 'node')
-            .attr('transform', (d: any) => `translate(${d.x},${d.y})`)
-            .on('click', (_event, d: any) => {
-                if (mode === 'sandbox') {
-                    setSelectedNodeId(d.data.id);
-                }
-            });
+            const rootNode = d3.hierarchy(dataToRender);
+            // Dynamic width adjustment
+            const treeLayout = d3.tree().size([width - 40, height - 100]);
+            const treeData = treeLayout(rootNode as any);
 
-        // Circle
-        nodeGroup.append('circle')
-            .attr('r', 25)
-            .attr('fill', (d: any) => {
-                const isSelected = mode === 'sandbox' && d.data.id === selectedNodeId;
-                if (isSelected) return '#db2777'; // Pink selection
-                if (!d.data.active) return '#94a3b8'; // Inactive gray
-                if (d.data.id === 'root') return '#0f766e'; // You
-                if (d.data.isSpillover) return '#f59e0b'; // Spillover orange
-                return '#3b82f6'; // Standard blue
-            })
-            .attr('stroke', (d: any) => mode === 'sandbox' && d.data.id === selectedNodeId ? '#fff' : '#fff')
-            .attr('stroke-width', (d: any) => mode === 'sandbox' && d.data.id === selectedNodeId ? 4 : 2)
-            .style('cursor', mode === 'sandbox' ? 'pointer' : 'default');
+            // Center group - translate X to (width - (width - 40)) / 2  = 20
+            // Or just use a fixed margin of 20 since we sized the tree to width - 40
+            const g = svg.append('g').attr('transform', `translate(20, 50)`);
 
-        // Label
-        nodeGroup.append('text')
-            .attr('dy', 5)
-            .attr('text-anchor', 'middle')
-            .text((d: any) => d.data.name)
-            .attr('fill', 'white')
-            .style('font-size', '10px')
-            .style('font-weight', 'bold');
+            // Links
+            g.selectAll('.link')
+                .data(treeData.links())
+                .enter()
+                .append('path')
+                .attr('class', 'link')
+                .attr('d', d3.linkVertical()
+                    .x((d: any) => d.x)
+                    .y((d: any) => d.y) as any
+                )
+                .attr('fill', 'none')
+                .attr('stroke', '#cbd5e1')
+                .attr('stroke-width', 2)
+                .attr('stroke-dasharray', (d: any) => d.target.data.isSpillover ? '5,5' : '0');
 
-        // Stats (Sandbox only?)
-        if (mode === 'sandbox') {
+            // Nodes
+            const nodeGroup = g.selectAll('.node')
+                .data(treeData.descendants())
+                .enter()
+                .append('g')
+                .attr('class', 'node')
+                .attr('transform', (d: any) => `translate(${d.x},${d.y})`)
+                .on('click', (_event, d: any) => {
+                    if (mode === 'sandbox') {
+                        setSelectedNodeId(d.data.id);
+                    }
+                });
+
+            // Circle
+            nodeGroup.append('circle')
+                .attr('r', 25)
+                .attr('fill', (d: any) => {
+                    const isSelected = mode === 'sandbox' && d.data.id === selectedNodeId;
+                    if (isSelected) return '#db2777';
+                    if (!d.data.active) return '#94a3b8';
+                    if (d.data.id === 'root') return '#0f766e';
+                    if (d.data.isSpillover) return '#f59e0b';
+                    return '#3b82f6';
+                })
+                .attr('stroke', (d: any) => mode === 'sandbox' && d.data.id === selectedNodeId ? '#fff' : '#fff')
+                .attr('stroke-width', (d: any) => mode === 'sandbox' && d.data.id === selectedNodeId ? 4 : 2)
+                .style('cursor', mode === 'sandbox' ? 'pointer' : 'default');
+
+            // Label
             nodeGroup.append('text')
-                .attr('dy', 40)
+                .attr('dy', 5)
                 .attr('text-anchor', 'middle')
-                .text((d: any) => `${d.data.totalLeftVol || 0} | ${d.data.totalRightVol || 0}`)
-                .attr('fill', '#64748b')
-                .style('font-size', '9px')
-                .style('font-weight', 'bold');
-        } else { // Story mode specific indicators
-            nodeGroup.append('text')
-                .attr('dy', 40)
-                .attr('text-anchor', 'middle')
-                .text((d: any) => d.data.active ? `${d.data.personalPV} PV` : 'Inactive')
-                .attr('fill', (d: any) => d.data.active ? '#0f766e' : '#ef4444')
+                .text((d: any) => d.data.name)
+                .attr('fill', 'white')
                 .style('font-size', '10px')
                 .style('font-weight', 'bold');
 
-            // Spillover Badge
-            nodeGroup.filter((d: any) => d.data.isSpillover)
-                .append('text')
-                .attr('dy', -35)
-                .attr('text-anchor', 'middle')
-                .text('SPILLOVER')
-                .attr('fill', '#f59e0b')
-                .style('font-size', '9px')
-                .style('font-weight', '800');
-        }
+            // Stats
+            if (mode === 'sandbox') {
+                nodeGroup.append('text')
+                    .attr('dy', 40)
+                    .attr('text-anchor', 'middle')
+                    .text((d: any) => `${d.data.totalLeftVol || 0} | ${d.data.totalRightVol || 0}`)
+                    .attr('fill', '#64748b')
+                    .style('font-size', '9px')
+                    .style('font-weight', 'bold');
+            } else {
+                nodeGroup.append('text')
+                    .attr('dy', 40)
+                    .attr('text-anchor', 'middle')
+                    .text((d: any) => d.data.active ? `${d.data.personalPV} PV` : 'Inactive')
+                    .attr('fill', (d: any) => d.data.active ? '#0f766e' : '#ef4444')
+                    .style('font-size', '10px')
+                    .style('font-weight', 'bold');
+
+                nodeGroup.filter((d: any) => d.data.isSpillover)
+                    .append('text')
+                    .attr('dy', -35)
+                    .attr('text-anchor', 'middle')
+                    .text('SPILLOVER')
+                    .attr('fill', '#f59e0b')
+                    .style('font-size', '9px')
+                    .style('font-weight', '800');
+            }
+        };
+
+        updateGraph();
+
+        window.addEventListener('resize', updateGraph);
+        return () => window.removeEventListener('resize', updateGraph);
 
     }, [sandboxNodes, mode, currentStep, selectedNodeId]); // Re-render on these changes
 
@@ -473,21 +489,21 @@ const CommissionSimulation = () => {
             <div className="flex justify-center p-1 bg-gray-100 dark:bg-white/5 rounded-xl w-fit mx-auto">
                 <button
                     onClick={() => setMode('story')}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${mode === 'story' ? 'bg-white dark:bg-[#2d2e36] shadow text-teal-600' : 'text-gray-500'}`}
+                    className={`px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${mode === 'story' ? 'bg-white dark:bg-[#2d2e36] shadow text-teal-600' : 'text-gray-500'}`}
                 >
                     Story Guide (Learn)
                 </button>
                 <button
                     onClick={() => setMode('sandbox')}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${mode === 'sandbox' ? 'bg-white dark:bg-[#2d2e36] shadow text-indigo-600' : 'text-gray-500'}`}
+                    className={`px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all ${mode === 'sandbox' ? 'bg-white dark:bg-[#2d2e36] shadow text-indigo-600' : 'text-gray-500'}`}
                 >
                     Sandbox Mode (Experiment)
                 </button>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-6 h-[700px]">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:h-[700px] h-auto">
 
-                <div className="flex-1 bg-white dark:bg-[#1a1b23] rounded-2xl border border-gray-200 dark:border-white/5 relative flex flex-col overflow-hidden">
+                <div className="flex-1 bg-white dark:bg-[#1a1b23] rounded-2xl border border-gray-200 dark:border-white/5 relative flex flex-col overflow-hidden min-h-[350px] lg:min-h-0">
                     <div className="p-4 border-b border-gray-200 dark:border-white/5 flex justify-between items-center bg-gray-50/50 dark:bg-white/[0.02]">
                         <h2 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                             {mode === 'story' ? <TrendingUp size={20} className="text-teal-500" /> : <Zap size={20} className="text-indigo-500" />}
@@ -524,20 +540,22 @@ const CommissionSimulation = () => {
 
                     {mode === 'sandbox' && (
                         <div className="border-t border-gray-200 dark:border-white/5 p-4 bg-white dark:bg-[#1a1b23]">
-                            <div className="flex flex-wrap items-center gap-4">
-                                <span className="text-xs font-bold text-gray-500 uppercase">Selected: <span className="text-indigo-600">{sandboxNodes.find(n => n.id === selectedNodeId)?.name || 'None'}</span></span>
-                                <div className="h-6 w-px bg-gray-200 dark:bg-white/10"></div>
-                                <button onClick={() => addSandboxMember('left')} className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100">
-                                    <PlusCircle size={14} /> Add Left
-                                </button>
-                                <button onClick={() => addSandboxMember('right')} className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100">
-                                    <PlusCircle size={14} /> Add Right
-                                </button>
-                                <button onClick={() => purchaseProduct(100)} className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs font-bold hover:bg-green-100">
-                                    <ShoppingCart size={14} /> Buy 100 PV
-                                </button>
-                                <div className="flex-1"></div>
-                                <button onClick={runSandboxCycle} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-500/20">
+                            <div className="flex flex-wrap items-center gap-2 lg:gap-4 justify-between">
+                                <span className="text-xs font-bold text-gray-500 uppercase w-full sm:w-auto mb-2 sm:mb-0">Selected: <span className="text-indigo-600">{sandboxNodes.find(n => n.id === selectedNodeId)?.name || 'None'}</span></span>
+
+                                <div className="flex gap-2 flex-wrap">
+                                    <button onClick={() => addSandboxMember('left')} className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 whitespace-nowrap">
+                                        <PlusCircle size={14} /> Add L
+                                    </button>
+                                    <button onClick={() => addSandboxMember('right')} className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 whitespace-nowrap">
+                                        <PlusCircle size={14} /> Add R
+                                    </button>
+                                    <button onClick={() => purchaseProduct(100)} className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-green-50 text-green-600 rounded-lg text-xs font-bold hover:bg-green-100 whitespace-nowrap">
+                                        <ShoppingCart size={14} /> Buy
+                                    </button>
+                                </div>
+
+                                <button onClick={runSandboxCycle} className="w-full sm:w-auto mt-2 sm:mt-0 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-500/20">
                                     <RefreshCw size={14} /> Run Commissions
                                 </button>
                             </div>

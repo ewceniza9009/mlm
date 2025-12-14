@@ -11,6 +11,7 @@ const AdminSettingsPage = () => {
     const [enableShop, setEnableShop] = useState(false);
     const [enablePublicShop, setEnablePublicShop] = useState(false);
     const [shopFirstEnrollment, setShopFirstEnrollment] = useState(false);
+    const [shopFirstHoldingTank, setShopFirstHoldingTank] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
 
     useEffect(() => {
@@ -19,6 +20,7 @@ const AdminSettingsPage = () => {
             setEnableShop(settings.enableShop === true);
             setEnablePublicShop(settings.enablePublicShop === true);
             setShopFirstEnrollment(settings.shopFirstEnrollment === true);
+            setShopFirstHoldingTank(settings.shopFirstHoldingTank === true);
         }
     }, [settings]);
 
@@ -69,6 +71,12 @@ const AdminSettingsPage = () => {
         const newValue = !shopFirstEnrollment;
         setShopFirstEnrollment(newValue); // Optimistic update
 
+        // If disabling Shop First Enrollment, also disable Shop First Holding Tank
+        if (newValue === false) {
+            setShopFirstHoldingTank(false);
+            await updateSetting({ key: 'shopFirstHoldingTank', value: false }).unwrap();
+        }
+
         try {
             await updateSetting({ key: 'shopFirstEnrollment', value: newValue }).unwrap();
             setShowSuccess(true);
@@ -76,6 +84,23 @@ const AdminSettingsPage = () => {
         } catch (error) {
             console.error('Failed to update setting', error);
             setShopFirstEnrollment(!newValue); // Revert on error
+            // If we forced holding tank off, should we revert it? 
+            // Probably fine to leave it off or revert it if we want strict consistency, but complex.
+        }
+    };
+
+    // New handler for Shop First Holding Tank
+    const handleToggleShopFirstHoldingTank = async () => {
+        const newValue = !shopFirstHoldingTank;
+        setShopFirstHoldingTank(newValue); // Optimistic update
+
+        try {
+            await updateSetting({ key: 'shopFirstHoldingTank', value: newValue }).unwrap();
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        } catch (error) {
+            console.error('Failed to update setting', error);
+            setShopFirstHoldingTank(!newValue); // Revert on error
         }
     };
 
@@ -130,27 +155,7 @@ const AdminSettingsPage = () => {
                             </button>
                         </div>
 
-                        {/* Setting Item: Enable Public Retail Shop */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-gray-100 dark:border-slate-700">
-                            <div>
-                                <h3 className="font-medium text-gray-900 dark:text-white">Enable Public Retail Shop</h3>
-                                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-                                    Allow guests to purchase via referral links (e.g., /store?ref=user).
-                                </p>
-                            </div>
 
-                            <button
-                                onClick={handleTogglePublicShop}
-                                disabled={isUpdating}
-                                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${enablePublicShop ? 'bg-teal-500' : 'bg-gray-200 dark:bg-slate-700'
-                                    }`}
-                            >
-                                <span
-                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${enablePublicShop ? 'translate-x-6' : 'translate-x-1'
-                                        }`}
-                                />
-                            </button>
-                        </div>
 
                         {/* Setting Item: Shop First Enrollment */}
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-gray-100 dark:border-slate-700">
@@ -169,6 +174,52 @@ const AdminSettingsPage = () => {
                             >
                                 <span
                                     className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${shopFirstEnrollment ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* Setting Item: Shop First Holding Tank */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+                            <div>
+                                <h3 className="font-medium text-gray-900 dark:text-white">Shop First Holding Tank</h3>
+                                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                                    Send Shop First recruits to Holding Tank instead of auto-placement.
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={handleToggleShopFirstHoldingTank}
+                                disabled={isUpdating || !shopFirstEnrollment}
+                                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${!shopFirstEnrollment
+                                    ? 'bg-gray-100 dark:bg-slate-800 opacity-50 cursor-not-allowed'
+                                    : shopFirstHoldingTank ? 'bg-teal-500' : 'bg-gray-200 dark:bg-slate-700'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${shopFirstHoldingTank ? 'translate-x-6' : 'translate-x-1'
+                                        }`}
+                                />
+                            </button>
+                        </div>
+
+                        {/* Setting Item: Enable Public Retail Shop */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-gray-100 dark:border-slate-700">
+                            <div>
+                                <h3 className="font-medium text-gray-900 dark:text-white">Enable Public Retail Shop</h3>
+                                <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+                                    Allow guests to purchase via referral links (e.g., /store?ref=user).
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={handleTogglePublicShop}
+                                disabled={isUpdating}
+                                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${enablePublicShop ? 'bg-teal-500' : 'bg-gray-200 dark:bg-slate-700'
+                                    }`}
+                            >
+                                <span
+                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${enablePublicShop ? 'translate-x-6' : 'translate-x-1'
                                         }`}
                                 />
                             </button>

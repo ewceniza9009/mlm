@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useGetHoldingTankQuery, usePlaceMemberMutation } from '../store/api';
 import { User, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -11,7 +11,8 @@ const HoldingTank = () => {
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     const handlePlace = async () => {
-        if (!selectedUser || !targetParentId) return;
+        if (!selectedUser) return;
+        // targetParentId is now optional (auto-spillover if empty)
 
         try {
             await placeMember({
@@ -102,7 +103,7 @@ const HoldingTank = () => {
                                 onChange={(e) => setTargetParentId(e.target.value)}
                                 className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded p-2 text-gray-900 dark:text-white focus:border-teal-500 focus:outline-none"
                             />
-                            <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1">Copy ID from tree details panel</p>
+                            <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1">Leave empty for auto-spillover on selected leg</p>
                         </div>
 
                         <div>
@@ -125,8 +126,8 @@ const HoldingTank = () => {
 
                         <button
                             onClick={handlePlace}
-                            disabled={isPlacing || !targetParentId}
-                            className={`w-full py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${!targetParentId
+                            disabled={isPlacing}
+                            className={`w-full py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${isPlacing
                                 ? 'bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 cursor-not-allowed'
                                 : 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white hover:from-teal-600 hover:to-cyan-600 shadow-lg shadow-teal-500/20'
                                 }`}

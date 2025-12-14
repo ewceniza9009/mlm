@@ -259,3 +259,25 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Resolve Referrer (Public)
+export const resolveReferrer = async (req: Request, res: Response) => {
+  try {
+    const { username } = req.params;
+    console.log(`[ResolveReferrer] Lookup: ${username}`);
+    const user = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, 'i') } }); // Case insensitive
+
+    if (!user) {
+      return res.status(404).json({ message: 'Referrer not found' });
+    }
+
+    res.json({
+      id: user._id,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error resolving referrer' });
+  }
+};

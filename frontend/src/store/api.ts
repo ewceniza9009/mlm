@@ -63,6 +63,9 @@ export const api = createApi({
       }),
       invalidatesTags: ['User']
     }),
+    resolveReferrer: builder.query({
+      query: (username) => `auth/resolve/${username}`,
+    }),
     getSystemLogs: builder.query({
       query: (params) => {
         const cleaned = Object.fromEntries(Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== ''));
@@ -430,6 +433,7 @@ export const {
   useGetWalletQuery,
   useRequestWithdrawalMutation,
   useUpdateProfileMutation,
+  useResolveReferrerQuery,
   useRunCommissionsMutation,
   useGetSystemLogsQuery,
   useGetAdminCommissionsQuery,

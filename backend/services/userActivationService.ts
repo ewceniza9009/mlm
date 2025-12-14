@@ -51,47 +51,73 @@ export const activateUser = async (userId: string, activatorOrderAmount: number 
 
         // 3. FORCE PLACEMENT (Bypass Holding Tank for Shop First Activation)
         // User Requirement: "REGARDLESS IF THE HOLDING TANK SETTINGS IS ENABLED OR DISABLED... IT WILL AUTOMATICALLY MOVE THE MEMBER... TO THE GENEALOGY TREE"
+        // Update: Now conditional based on shopFirstHoldingTank setting.
+
+        // Import SystemSetting if not already imported (I will add import at top of file separately if needed, but for now I assume I can import or find one way)
+        // Actually, to avoid adding imports in this chunk blindly, let's look at the top of file first.
+        // It's not imported.
+        // I will use dynamic import or assume I will add the import in a previous step. 
+        // Better: I'll use the replace_file_content to add the import first.
+
+        // Wait, I can do it in one go if I'm careful or multiple steps. 
+        // Let's assume I'll add the import first.
+
+        const { getSettingValue } = require('../controllers/settingsController');
+        const shopFirstHoldingTank = await getSettingValue('shopFirstHoldingTank', false);
 
         if (sponsor) {
-            // force auto place logic
-
-            console.log('[ActivateUser] Auto-placing in Network...');
-            user.isPlaced = true;
-            savedUser = await spilloverService.placeUser(user as any, sponsor.id);
-
-            // Trigger Bonuses
-            let baseAmount = 0;
-            let pvAmount = 0;
-
-            if (activatorOrderAmount) {
-                // SHOP FIRST ACTIVATION
-                // Triggered by Order Payment.
-                // We use the Order Amount for the Referral Bonus.
-                // We set PV to 0 here because the Order Controller handles the Product PV separately.
-                console.log(`[ActivateUser] Shop First: Using Order Amount $${activatorOrderAmount} as base. Ignoring Package PV to prevent double-counting.`);
-                baseAmount = activatorOrderAmount;
-                pvAmount = 0;
-            } else if (user.enrollmentPackage) {
-                // PACKAGE INCLUDED ACTIVATION
-                // Triggered by legacy registration with package
-                const pkg = await Package.findById(user.enrollmentPackage);
-                if (pkg) {
-                    baseAmount = pkg.price;
-                    pvAmount = pkg.pv;
-                }
+            if (shopFirstHoldingTank) {
+                console.log(`[ActivateUser] Shop First Holding Tank Enabled. Placing ${user.username} in Holding Tank.`);
+                user.isPlaced = false;
+                // user.status is already active
+                // sponsorId is already set
+                savedUser = await user.save();
+                // Note: we still need to trigger bonuses for activation?
+                // Typically bonuses are paid WHEN placed?
+                // In `placeUserManually` (placementController.ts):
+                // "Trigger Commissions (Bonuses delayed until placement)"
+                // So if we park in Holding Tank, we skip bonuses here.
+                // Correct.
             } else {
-                console.warn('[ActivateUser] No Package and No Order Amount. Activation might be incomplete.');
-            }
+                // force auto place logic
+                console.log('[ActivateUser] Auto-placing in Network...');
+                user.isPlaced = true;
+                savedUser = await spilloverService.placeUser(user as any, sponsor.id);
 
-            // Distribute Direct Referral Bonus
-            if (baseAmount > 0) {
-                await CommissionEngine.distributeReferralBonus(sponsor.id, savedUser._id.toString(), baseAmount);
-            }
+                // Trigger Bonuses
+                let baseAmount = 0;
+                let pvAmount = 0;
 
-            // Distribute PV (Only if from Package - Product PV is handled by Order Controller)
-            if (pvAmount > 0) {
-                await CommissionEngine.updateUplinePV(savedUser._id.toString(), pvAmount);
-                await CommissionEngine.addPersonalPV(savedUser._id.toString(), pvAmount);
+                if (activatorOrderAmount) {
+                    // SHOP FIRST ACTIVATION
+                    // Triggered by Order Payment.
+                    // We use the Order Amount for the Referral Bonus.
+                    // We set PV to 0 here because the Order Controller handles the Product PV separately.
+                    console.log(`[ActivateUser] Shop First: Using Order Amount $${activatorOrderAmount} as base. Ignoring Package PV to prevent double-counting.`);
+                    baseAmount = activatorOrderAmount;
+                    pvAmount = 0;
+                } else if (user.enrollmentPackage) {
+                    // PACKAGE INCLUDED ACTIVATION
+                    // Triggered by legacy registration with package
+                    const pkg = await Package.findById(user.enrollmentPackage);
+                    if (pkg) {
+                        baseAmount = pkg.price;
+                        pvAmount = pkg.pv;
+                    }
+                } else {
+                    console.warn('[ActivateUser] No Package and No Order Amount. Activation might be incomplete.');
+                }
+
+                // Distribute Direct Referral Bonus
+                if (baseAmount > 0) {
+                    await CommissionEngine.distributeReferralBonus(sponsor.id, savedUser._id.toString(), baseAmount);
+                }
+
+                // Distribute PV
+                if (pvAmount > 0) {
+                    await CommissionEngine.updateUplinePV(savedUser._id.toString(), pvAmount);
+                    await CommissionEngine.addPersonalPV(savedUser._id.toString(), pvAmount);
+                }
             }
         } else {
             // No Sponsor (Root)

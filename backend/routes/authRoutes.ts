@@ -13,4 +13,7 @@ router.post('/login', authController.login);
 // Profile Routes
 router.put('/profile', protect, authController.updateProfile);
 
+// Public Referrer Lookup
+router.get('/resolve/:username', authController.resolveReferrer);
+
 export default router;

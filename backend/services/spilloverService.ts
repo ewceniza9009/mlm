@@ -112,11 +112,11 @@ const traverseToFirstEmpty = async (startNodeId: Types.ObjectId): Promise<Placem
   throw new Error('Tree full?'); // Unlikely in infinite tree
 };
 
-const placeUser = async (newUser: IUser, sponsorId: string): Promise<IUser> => {
+const placeUser = async (newUser: IUser, sponsorId: string, preferenceOverride?: string): Promise<IUser> => {
   const sponsor = await User.findById(sponsorId);
   if (!sponsor) throw new Error('Cannot find sponsor');
 
-  const preference: string = sponsor.spilloverPreference || 'weaker_leg';
+  const preference: string = preferenceOverride || sponsor.spilloverPreference || 'weaker_leg';
 
   const placement = await findPlacement(sponsorId, preference);
 

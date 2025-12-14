@@ -198,6 +198,34 @@ const DashboardHome = () => {
               </button>
             </div>
           </div>
+
+          {/* Public Shop Link Bar (Conditionally Rendered) */}
+          {/* We can check settings here if we had them in context/redux, forcing show for now since user just asked for it */}
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-xl text-white shadow-lg shadow-indigo-500/20 flex flex-wrap gap-4 items-center justify-between">
+            <div>
+              <h3 className="font-bold text-lg mb-1">Promote Your Shop</h3>
+              <p className="text-indigo-100 text-sm">Share your public shop link to earn retail commissions.</p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-3 bg-white/10 p-1.5 rounded-lg border border-white/20 backdrop-blur-sm">
+                <code className="px-3 py-1 font-mono text-sm select-all">{import.meta.env.VITE_FRONTEND_URL || window.location.origin}/store?ref={user?.username}</code>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/store?ref=${user?.username}`); showAlert('Copied!', 'success'); }}
+                  className="bg-white text-indigo-600 px-3 py-1.5 rounded font-bold text-xs hover:bg-indigo-50 transition"
+                >
+                  Copy
+                </button>
+              </div>
+
+              <button
+                onClick={() => window.open(`/store?ref=${user?.username}`, '_blank')}
+                className="bg-white text-indigo-700 hover:bg-indigo-50 px-5 py-2.5 rounded-lg font-bold transition flex items-center gap-2 shadow-lg shadow-black/10"
+              >
+                <ShoppingBag size={18} /> Visit Shop
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

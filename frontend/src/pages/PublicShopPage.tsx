@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useGetPublicProductsQuery, useCreateOrderMutation } from '../store/api';
-import { ShoppingBag, User } from 'lucide-react';
+import { useGetPublicProductsQuery, useCreateOrderMutation, useResolveReferrerQuery } from '../store/api';
+import { ShoppingBag, User, AlertCircle } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -12,6 +12,7 @@ const PublicShopPage = () => {
     const refUsername = searchParams.get('ref');
 
     const { data: products, error } = useGetPublicProductsQuery({});
+    const { data: referrer, isError: isRefError } = useResolveReferrerQuery(refUsername, { skip: !refUsername });
     const [createOrder, { isLoading: isOrdering }] = useCreateOrderMutation();
 
     // Guest Checkout State
@@ -19,14 +20,6 @@ const PublicShopPage = () => {
     const [cart, setCart] = useState<{ productId: string, name: string, price: number, quantity: number }[]>([]);
     const [guestDetails, setGuestDetails] = useState({ name: '', email: '', address: '' });
 
-
-    // Mock resolving referrer (For MVP, we might need a real endpoint if we strictly use IDs)
-    // For now, assuming we pass ID or just ignoring validation for this exact snippet unless we add a lookup endpoint.
-    // Let's assume the URL has ?ref=USER_ID for simplicity in MVP, or we would need a lookup endpoint.
-    // Real implementation: Call API to resolve "john_doe" -> "ID_123". 
-    // Let's fallback to just storing it and assuming backend handles or we add an endpoint later. 
-    // Actually, backend needs ID. 
-    // Let's Skip Referrer Lookup for exact step now, and just allow "Guest Order".
 
     const addToCart = (product: any) => {
         setCart([{
@@ -43,16 +36,13 @@ const PublicShopPage = () => {
         if (cart.length === 0) return;
 
         try {
-            // For MVP, if ref is present, we need its ID. 
-            // Since we don't have a public "lookup user by username" endpoint ready in this chat, 
-            // we will proceed with a generic guest order or assume passed ID.
-            // Improve: Add public lookup endpoint later.
+            const referrerId = referrer ? referrer.id : null;
 
             await createOrder({
                 items: cart.map(i => ({ productId: i.productId, quantity: i.quantity })),
                 isGuest: true,
                 guestDetails,
-                referrerId: null // TODO: Add lookup logic
+                referrerId: referrerId // Sent to backend
             }).unwrap();
 
             showAlert('Guest Order Placed Successfully!', 'success');
@@ -82,9 +72,14 @@ const PublicShopPage = () => {
                         </div>
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">GenMatrix Store</h1>
                     </div>
-                    {refUsername && (
+                    {refUsername && !isRefError && referrer && (
                         <div className="bg-teal-50 text-teal-700 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
-                            <User size={16} /> Referring Member: {refUsername}
+                            <User size={16} /> Referring Member: {referrer.firstName} {referrer.lastName}
+                        </div>
+                    )}
+                    {refUsername && isRefError && (
+                        <div className="bg-red-50 text-red-700 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
+                            <AlertCircle size={16} /> Invalid Referrer
                         </div>
                     )}
                 </header>
@@ -98,8 +93,16 @@ const PublicShopPage = () => {
                                 key={product._id}
                                 className="bg-white dark:bg-[#1a1b23] rounded-2xl shadow-sm border border-gray-100 dark:border-white/5 overflow-hidden"
                             >
-                                <div className="aspect-[4/3] bg-gray-100 dark:bg-white/5 flex items-center justify-center">
-                                    <ShoppingBag size={48} className="text-gray-300" />
+                                <div className="aspect-[4/3] bg-gray-100 dark:bg-white/5 flex items-center justify-center relative">
+                                    {product.image ? (
+                                        <img
+                                            src={product.image}
+                                            alt={product.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <ShoppingBag size={48} className="text-gray-300" />
+                                    )}
                                 </div>
                                 <div className="p-6">
                                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{product.name}</h3>

@@ -7,9 +7,11 @@ const AdminSupportPage = () => {
     const [replyTicket] = useReplyTicketMutation();
     const [updateStatus] = useUpdateTicketStatusMutation();
 
-    const [selectedTicket, setSelectedTicket] = useState<any>(null);
+    const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
     const [replyMessage, setReplyMessage] = useState('');
     const [filter, setFilter] = useState('ALL'); // ALL, OPEN, RESOLVED
+
+    const selectedTicket = tickets?.find((t: any) => t._id === selectedTicketId);
 
     const handleReply = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -26,13 +28,7 @@ const AdminSupportPage = () => {
         if (!selectedTicket) return;
         try {
             await updateStatus({ ticketId: selectedTicket._id, status }).unwrap();
-            // Ideally update local state or re-select to reflect change if needed, 
-            // but RTK Query will invalidate tag and refresh 'tickets' list. 
-            // We might need to handle selectedTicket update if it doesn't auto-update from the list reference.
-            // Actually, selectedTicket is a copy. It won't auto update. 
-            // We should rely on the list or find the updated one.
-            // For simplicity, let's close the selection or just show toast.
-            setSelectedTicket((prev: any) => ({ ...prev, status }));
+            // No local state update needed; RTK Query handles refetch
         } catch (err) {
             console.error(err);
         }
@@ -44,7 +40,7 @@ const AdminSupportPage = () => {
     });
 
     // Mobile Logic: If ticket selected -> Hide List
-    const showList = !selectedTicket;
+    const showList = !selectedTicketId;
 
     return (
         <div className="flex h-[calc(100vh-8rem)] md:gap-6 relative">
@@ -76,8 +72,8 @@ const AdminSupportPage = () => {
                         filteredTickets?.map((ticket: any) => (
                             <div
                                 key={ticket._id}
-                                onClick={() => setSelectedTicket(ticket)}
-                                className={`p-4 border-b border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${selectedTicket?._id === ticket._id ? 'bg-amber-50 dark:bg-amber-500/10 border-l-4 border-l-amber-500' : ''
+                                onClick={() => setSelectedTicketId(ticket._id)}
+                                className={`p-4 border-b border-gray-100 dark:border-white/5 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors ${selectedTicketId === ticket._id ? 'bg-amber-50 dark:bg-amber-500/10 border-l-4 border-l-amber-500' : ''
                                     }`}
                             >
                                 <div className="flex justify-between items-start mb-1">
@@ -115,7 +111,7 @@ const AdminSupportPage = () => {
                         <div className="p-4 border-b border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-white/5 flex justify-between items-center">
                             <div className="flex items-center gap-3">
                                 <button
-                                    onClick={() => setSelectedTicket(null)}
+                                    onClick={() => setSelectedTicketId(null)}
                                     className="md:hidden p-1 -ml-2 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 rounded-full transition-colors"
                                 >
                                     <ArrowLeft size={20} />

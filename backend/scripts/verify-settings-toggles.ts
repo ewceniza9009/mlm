@@ -124,6 +124,34 @@ const verifyToggles = async () => {
             console.error('❌ FAIL: Logic leak! Shop opened despite being validly disabled?', resConflict.statusCode);
         }
 
+        // --- SCENARIO 5: SAFEGUARD CHECK (Auto-Disable) ---
+        console.log('\n[Scenario 5] SAFEGUARD: Disabling Shop should auto-disable Shop First');
+
+        // Setup: Enable Both
+        await SystemSetting.findOneAndUpdate({ key: 'shopFirstEnrollment' }, { value: true }, { upsert: true });
+        await SystemSetting.findOneAndUpdate({ key: 'enableShop' }, { value: true }, { upsert: true });
+
+        // Call Controller to Disable Shop
+        const { updateSetting } = require('../controllers/settingsController');
+        const reqSafeguard = createMockReq();
+        reqSafeguard.body = { key: 'enableShop', value: false };
+        const resSafeguard = createMockRes();
+
+        await updateSetting(reqSafeguard, resSafeguard);
+
+        // Verify DB State
+        const shopFirst = await SystemSetting.findOne({ key: 'shopFirstEnrollment' });
+        const shopEnabled = await SystemSetting.findOne({ key: 'enableShop' });
+
+        if (shopFirst?.value === false && shopEnabled?.value === false) {
+            console.log('✅ PASS: Safeguard worked! Shop First was auto-disabled.');
+        } else {
+            console.error('❌ FAIL: Safeguard failed.', {
+                shopFirst: shopFirst?.value,
+                shopEnabled: shopEnabled?.value
+            });
+        }
+
         console.log('\n--- TESTS COMPLETE ---');
         process.exit(0);
     } catch (error) {

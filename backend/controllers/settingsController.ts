@@ -50,6 +50,14 @@ export const updateSetting = async (req: AuthRequest, res: Response) => {
             { new: true, upsert: true } // Create if doesn't exist
         );
 
+        // SAFEGUARD: If disabling shop, also disable Shop First Enrollment & Holding Tank to prevent conflicts
+        if (key === 'enableShop' && value === false) {
+            await SystemSetting.updateMany(
+                { key: { $in: ['shopFirstEnrollment', 'shopFirstHoldingTank'] } },
+                { value: false, updatedAt: new Date() }
+            );
+        }
+
         res.json(setting);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });

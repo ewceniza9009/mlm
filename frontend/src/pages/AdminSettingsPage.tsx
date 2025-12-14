@@ -42,6 +42,12 @@ const AdminSettingsPage = () => {
         const newValue = !enableShop;
         setEnableShop(newValue); // Optimistic update
 
+        // Sync local state with backend safeguard: If Shop is disabled, Shop First features must be disabled.
+        if (newValue === false) {
+            setShopFirstEnrollment(false);
+            setShopFirstHoldingTank(false);
+        }
+
         try {
             await updateSetting({ key: 'enableShop', value: newValue }).unwrap();
             setShowSuccess(true);
@@ -49,6 +55,7 @@ const AdminSettingsPage = () => {
         } catch (error) {
             console.error('Failed to update setting', error);
             setEnableShop(!newValue); // Revert on error
+            // Theoretically revert the others too if it failed, but likely acceptable to drift on error.
         }
     };
 
@@ -168,8 +175,10 @@ const AdminSettingsPage = () => {
 
                             <button
                                 onClick={handleToggleShopFirst}
-                                disabled={isUpdating}
-                                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${shopFirstEnrollment ? 'bg-teal-500' : 'bg-gray-200 dark:bg-slate-700'
+                                disabled={isUpdating || !enableShop}
+                                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${!enableShop
+                                    ? 'bg-gray-100 dark:bg-slate-800 opacity-50 cursor-not-allowed'
+                                    : shopFirstEnrollment ? 'bg-teal-500' : 'bg-gray-200 dark:bg-slate-700'
                                     }`}
                             >
                                 <span

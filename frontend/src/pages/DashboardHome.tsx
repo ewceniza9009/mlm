@@ -109,7 +109,65 @@ const DashboardHome = () => {
             />
           </div>
 
-          {/* 2. Charts Section */}
+
+          {/* 2. Action Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Quick Actions Bar */}
+            <div className="bg-gradient-to-r from-teal-500 to-emerald-600 p-6 rounded-xl text-white shadow-lg shadow-teal-500/20 flex flex-col justify-between h-full">
+              <div className="mb-4">
+                <h3 className="font-bold text-lg mb-1">Grow Your Network</h3>
+                <p className="text-teal-100 text-sm">Share your referral link to earn bonuses.</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 bg-white/10 p-1.5 rounded-lg border border-white/20 backdrop-blur-sm w-full">
+                  <code className="px-2 py-1 font-mono text-xs select-all truncate flex-1">{import.meta.env.VITE_FRONTEND_URL || window.location.origin}/ref/{user?.username}</code>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/ref/${user?.username}`); showAlert('Copied!', 'success'); }}
+                    className="bg-white text-teal-600 px-3 py-1.5 rounded font-bold text-xs hover:bg-teal-50 transition shrink-0"
+                  >
+                    Copy
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => window.location.href = '/enroll'}
+                  className="bg-white text-teal-700 hover:bg-teal-50 px-5 py-2.5 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-black/10 w-full"
+                >
+                  <Users size={18} /> Enroll New Member
+                </button>
+              </div>
+            </div>
+
+            {/* Public Shop Link Bar */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-xl text-white shadow-lg shadow-indigo-500/20 flex flex-col justify-between h-full">
+              <div className="mb-4">
+                <h3 className="font-bold text-lg mb-1">Promote Your Shop</h3>
+                <p className="text-indigo-100 text-sm">Share your public shop link to earn retail commissions.</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 bg-white/10 p-1.5 rounded-lg border border-white/20 backdrop-blur-sm w-full">
+                  <code className="px-2 py-1 font-mono text-xs select-all truncate flex-1">{import.meta.env.VITE_FRONTEND_URL || window.location.origin}/store?ref={user?.username}</code>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/store?ref=${user?.username}`); showAlert('Copied!', 'success'); }}
+                    className="bg-white text-indigo-600 px-3 py-1.5 rounded font-bold text-xs hover:bg-indigo-50 transition shrink-0"
+                  >
+                    Copy
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => window.open(`/store?ref=${user?.username}`, '_blank')}
+                  className="bg-white text-indigo-700 hover:bg-indigo-50 px-5 py-2.5 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-black/10 w-full"
+                >
+                  <ShoppingBag size={18} /> Visit Shop
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Charts Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Earnings Chart */}
             <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm dark:shadow-none">
@@ -172,60 +230,7 @@ const DashboardHome = () => {
             </div>
           </div>
 
-          {/* Quick Actions Bar */}
-          <div className="bg-gradient-to-r from-teal-500 to-emerald-600 p-6 rounded-xl text-white shadow-lg shadow-teal-500/20 flex flex-wrap gap-4 items-center justify-between">
-            <div>
-              <h3 className="font-bold text-lg mb-1">Grow Your Network</h3>
-              <p className="text-teal-100 text-sm">Share your referral link to earn bonuses.</p>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-3 bg-white/10 p-1.5 rounded-lg border border-white/20 backdrop-blur-sm">
-                <code className="px-3 py-1 font-mono text-sm select-all">{import.meta.env.VITE_FRONTEND_URL || window.location.origin}/ref/{user?.username}</code>
-                <button
-                  onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/ref/${user?.username}`); showAlert('Copied!', 'success'); }}
-                  className="bg-white text-teal-600 px-3 py-1.5 rounded font-bold text-xs hover:bg-teal-50 transition"
-                >
-                  Copy
-                </button>
-              </div>
-
-              <button
-                onClick={() => window.location.href = '/enroll'}
-                className="bg-white text-teal-700 hover:bg-teal-50 px-5 py-2.5 rounded-lg font-bold transition flex items-center gap-2 shadow-lg shadow-black/10"
-              >
-                <Users size={18} /> Enroll New Member
-              </button>
-            </div>
-          </div>
-
-          {/* Public Shop Link Bar (Conditionally Rendered) */}
-          {/* We can check settings here if we had them in context/redux, forcing show for now since user just asked for it */}
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-xl text-white shadow-lg shadow-indigo-500/20 flex flex-wrap gap-4 items-center justify-between">
-            <div>
-              <h3 className="font-bold text-lg mb-1">Promote Your Shop</h3>
-              <p className="text-indigo-100 text-sm">Share your public shop link to earn retail commissions.</p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-3 bg-white/10 p-1.5 rounded-lg border border-white/20 backdrop-blur-sm">
-                <code className="px-3 py-1 font-mono text-sm select-all">{import.meta.env.VITE_FRONTEND_URL || window.location.origin}/store?ref={user?.username}</code>
-                <button
-                  onClick={() => { navigator.clipboard.writeText(`${import.meta.env.VITE_FRONTEND_URL || window.location.origin}/store?ref=${user?.username}`); showAlert('Copied!', 'success'); }}
-                  className="bg-white text-indigo-600 px-3 py-1.5 rounded font-bold text-xs hover:bg-indigo-50 transition"
-                >
-                  Copy
-                </button>
-              </div>
-
-              <button
-                onClick={() => window.open(`/store?ref=${user?.username}`, '_blank')}
-                className="bg-white text-indigo-700 hover:bg-indigo-50 px-5 py-2.5 rounded-lg font-bold transition flex items-center gap-2 shadow-lg shadow-black/10"
-              >
-                <ShoppingBag size={18} /> Visit Shop
-              </button>
-            </div>
-          </div>
         </div>
       )}
 

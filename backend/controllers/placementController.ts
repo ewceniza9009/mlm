@@ -72,11 +72,12 @@ export const placeUserManually = async (req: Request, res: Response) => {
         } else {
             // Auto Spillover (No parent selected)
             // Use the selected leg ('left' or 'right') as the preference to find the extreme bottom.
-            // spilloverService.placeUser handles finding the spot and linking the nodes structurally.
-            // It does NOT trigger commissions, which is handled below in this controller.
+            // If 'auto' is selected, we pass 'weaker_leg' to force balancing.
 
             userToPlace.isPlaced = true;
-            await spilloverService.placeUser(userToPlace as any, sponsorId, position);
+            // Map 'auto' to 'weaker_leg', otherwise use explicit 'left'/'right'
+            const preference = position === 'auto' ? 'weaker_leg' : position;
+            await spilloverService.placeUser(userToPlace as any, sponsorId, preference);
         }
 
         const pkg: any = userToPlace.enrollmentPackage;

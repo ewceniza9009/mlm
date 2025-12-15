@@ -125,7 +125,12 @@ const placeUser = async (newUser: IUser, sponsorId: string, preferenceOverride?:
 
   const preference: string = preferenceOverride || sponsor.spilloverPreference || 'weaker_leg';
 
+  console.log(`[Spillover] Placing User: ${newUser.username} for Sponsor: ${sponsor.username} (${sponsorId})`);
+  console.log(`[Spillover] Preference: ${preference} (Override: ${preferenceOverride}, Sponsor: ${sponsor.spilloverPreference})`);
+
   const placement = await findPlacement(sponsorId, preference);
+  
+  console.log(`[Spillover] Placement Found: Parent=${placement.parentId}, Position=${placement.position}`);
 
   newUser.parentId = placement.parentId as any; // Cast if necessary, Types.ObjectId is compatible
   newUser.position = placement.position;

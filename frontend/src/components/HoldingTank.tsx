@@ -7,7 +7,7 @@ const HoldingTank = () => {
     const [placeMember, { isLoading: isPlacing }] = usePlaceMemberMutation();
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [targetParentId, setTargetParentId] = useState('');
-    const [position, setPosition] = useState<'left' | 'right'>('left');
+    const [position, setPosition] = useState<'left' | 'right' | 'auto'>('auto');
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     const handlePlace = async () => {
@@ -17,13 +17,14 @@ const HoldingTank = () => {
         try {
             await placeMember({
                 userId: selectedUser._id,
-                targetParentId,
+                targetParentId: position === 'auto' ? '' : targetParentId, // Force empty parent if auto
                 position
             }).unwrap();
 
             setMessage({ type: 'success', text: `Successfully placed ${selectedUser.username}!` });
             setSelectedUser(null);
             setTargetParentId('');
+            setPosition('auto'); // Reset to default
             refetch(); // Refresh list
 
             // Auto hide message
@@ -98,29 +99,40 @@ const HoldingTank = () => {
                             <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Under Parent (User ID)</label>
                             <input
                                 type="text"
-                                placeholder="Enter Parent ID"
+                                placeholder={position === 'auto' ? "Auto-Placement Enabled" : "Enter Parent ID"}
                                 value={targetParentId}
+                                disabled={position === 'auto'}
                                 onChange={(e) => setTargetParentId(e.target.value)}
-                                className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded p-2 text-gray-900 dark:text-white focus:border-teal-500 focus:outline-none"
+                                className={`w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded p-2 text-gray-900 dark:text-white focus:border-teal-500 focus:outline-none ${position === 'auto' ? 'opacity-50 cursor-not-allowed' : ''}`}
                             />
-                            <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1">Leave empty for auto-spillover on selected leg</p>
+                            <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1">
+                                {position === 'auto' ? 'Parent will be automatically selected based on balance.' : 'Leave empty for auto-spillover on selected leg'}
+                            </p>
                         </div>
 
                         <div>
                             <label className="block text-xs text-gray-500 dark:text-slate-400 mb-1">Position</label>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="flex flex-col gap-2">
                                 <button
-                                    onClick={() => setPosition('left')}
-                                    className={`p-2 rounded border text-sm transition-colors ${position === 'left' ? 'bg-teal-500 text-white border-teal-500' : 'bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400 border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
+                                    onClick={() => setPosition('auto')}
+                                    className={`p-2 rounded border text-sm transition-colors flex items-center justify-center gap-2 font-bold ${position === 'auto' ? 'bg-teal-500 text-white border-teal-500' : 'bg-white dark:bg-slate-800 text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-900/30 hover:bg-teal-50 dark:hover:bg-slate-700'}`}
                                 >
-                                    Left Leg
+                                    ✨ Auto Balance (Weaker Leg)
                                 </button>
-                                <button
-                                    onClick={() => setPosition('right')}
-                                    className={`p-2 rounded border text-sm transition-colors ${position === 'right' ? 'bg-teal-500 text-white border-teal-500' : 'bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400 border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
-                                >
-                                    Right Leg
-                                </button>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={() => setPosition('left')}
+                                        className={`p-2 rounded border text-sm transition-colors ${position === 'left' ? 'bg-teal-500 text-white border-teal-500' : 'bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400 border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
+                                    >
+                                        Extreme Left
+                                    </button>
+                                    <button
+                                        onClick={() => setPosition('right')}
+                                        className={`p-2 rounded border text-sm transition-colors ${position === 'right' ? 'bg-teal-500 text-white border-teal-500' : 'bg-white dark:bg-slate-800 text-gray-500 dark:text-slate-400 border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
+                                    >
+                                        Extreme Right
+                                    </button>
+                                </div>
                             </div>
                         </div>
 

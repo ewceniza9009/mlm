@@ -168,7 +168,7 @@ export const api = createApi({
       query: () => 'network/holding-tank',
       providesTags: ['Tree'],
     }),
-    placeMember: builder.mutation<any, { userId: string, targetParentId: string, position: 'left' | 'right' }>({
+    placeMember: builder.mutation<any, { userId: string, targetParentId: string, position: 'left' | 'right' | 'auto' }>({
       query: (data) => ({
         url: 'network/place-member',
         method: 'POST',

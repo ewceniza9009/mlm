@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import TreeVisualizer from '../components/TreeVisualizer';
 import StatsCard from '../components/StatsCard';
-import { DollarSign, Users, TrendingUp, Activity, ChevronUp, ChevronDown, UserCheck, ShoppingBag } from 'lucide-react';
+import { DollarSign, Users, TrendingUp, ChevronUp, ChevronDown, UserCheck, ShoppingBag, Activity } from 'lucide-react';
 
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { useGetWalletQuery, useGetTreeQuery, useGetEarningsAnalyticsQuery, useGetGrowthAnalyticsQuery, useGetMemberDetailsQuery } from '../store/api';
+import { useGetWalletQuery, useGetEarningsAnalyticsQuery, useGetGrowthAnalyticsQuery, useGetMemberDetailsQuery } from '../store/api';
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
@@ -13,6 +12,7 @@ import { useUI } from '../components/UIContext';
 import HypeTicker from '../components/HypeTicker';
 import RankProgress from '../components/RankProgress';
 import ProfitOptimizer from '../components/ProfitOptimizer';
+import Leaderboard from '../components/Leaderboard';
 import FomoAlerts from '../components/FomoAlerts';
 
 const DashboardHome = () => {
@@ -39,14 +39,9 @@ const DashboardHome = () => {
   // @ts-ignore
   const personalPV = myDetails?.stats?.personalPV ?? user?.personalPV ?? 0;
 
-  // Fetch Tree Data for Dashboard
-  const { data: treeData, isLoading: treeLoading, error: treeError } = useGetTreeQuery(user?.id);
-
-  const { data: wallet } = useGetWalletQuery(undefined);
-
-  const [isOverviewExpanded, setIsOverviewExpanded] = useState(true);
-
   // Fetch Analytics Data
+  const { data: wallet } = useGetWalletQuery(undefined);
+  const [isOverviewExpanded, setIsOverviewExpanded] = useState(true);
   const { data: earningsData, isLoading: earningsLoading } = useGetEarningsAnalyticsQuery(undefined, { pollingInterval: 60000 });
   const { data: growthData, isLoading: growthLoading } = useGetGrowthAnalyticsQuery(undefined, { pollingInterval: 60000 });
 
@@ -86,7 +81,7 @@ const DashboardHome = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-6">
             <StatsCard
               title="Total Earnings"
-              value={`$${wallet?.balance?.toFixed(2) || '0.00'}`}
+              value={`$${wallet?.balance?.toFixed(2) || '0.00'} `}
               icon={DollarSign}
               trend="Current Balance"
               trendUp={true}
@@ -119,30 +114,32 @@ const DashboardHome = () => {
               trend="Upgrade Eligible"
               trendUp={true}
             />
-          </div>
+          </div >
 
 
           {/* Main Content Grid: Left (Stats/Charts) & Right (Actions) */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          < div className="grid grid-cols-1 xl:grid-cols-3 gap-6" >
 
             {/* LEFT COLUMN (2/3 Width) - Rank & Charts */}
-            <div className="xl:col-span-2 space-y-6">
+            < div className="xl:col-span-2 space-y-6" >
 
               {/* Rank Progress (Road to Legend) - Now at Top */}
               {/* @ts-ignore */}
-              {myDetails?.stats?.rankProgress && (
-                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800">
-                  {/* @ts-ignore */}
-                  <RankProgress
-                    currentRank={user?.rank || 'Bronze'}
-                    nextRank={myDetails.stats.rankProgress.nextRank}
-                    progress={myDetails.stats.rankProgress.percent}
-                    amountNeeded={myDetails.stats.rankProgress.amountNeeded}
-                    currentEarnings={myDetails.stats.rankProgress.current}
-                    targetEarnings={myDetails.stats.rankProgress.target}
-                  />
-                </div>
-              )}
+              {
+                myDetails?.stats?.rankProgress && (
+                  <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800">
+                    {/* @ts-ignore */}
+                    <RankProgress
+                      currentRank={user?.rank || 'Bronze'}
+                      nextRank={myDetails.stats.rankProgress.nextRank}
+                      progress={myDetails.stats.rankProgress.percent}
+                      amountNeeded={myDetails.stats.rankProgress.amountNeeded}
+                      currentEarnings={myDetails.stats.rankProgress.current}
+                      targetEarnings={myDetails.stats.rankProgress.target}
+                    />
+                  </div>
+                )
+              }
 
               {/* Charts Area */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -206,6 +203,9 @@ const DashboardHome = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Hall of Fame Leaderboard - Moved to Main Column to fill space */}
+              <Leaderboard />
             </div>
 
             {/* RIGHT COLUMN (1/3 Width) - Action Stack */}
@@ -268,24 +268,8 @@ const DashboardHome = () => {
             </div>
           </div>
 
-        </div>
+        </div >
       )}
-
-      {/* BIGGER TREE SECTION */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 w-full min-h-[600px] border-t border-gray-200 dark:border-slate-800 pt-6`}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Activity className="text-teal-500" /> Live Genealogy Tree
-          </h2>
-          <div className="text-xs text-gray-400 dark:text-slate-400 bg-gray-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-            Scroll to zoom • Drag to move
-          </div>
-        </div>
-
-        <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-gray-200 dark:border-slate-800 relative w-full h-full">
-          {user?.id && <TreeVisualizer data={treeData} isLoading={treeLoading} error={treeError} />}
-        </div>
-      </div>
     </div>
   );
 };

@@ -287,3 +287,111 @@ export const getFomoAlerts = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+export const getLeaderboard = async (req: Request, res: Response) => {
+    try {
+        const period = req.query.period || 'monthly'; // 'weekly' | 'monthly'
+        const days = period === 'weekly' ? 7 : 30;
+
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+
+        // 1. Top Recruiters
+        const topRecruiters = await User.aggregate([
+            {
+                $match: {
+                    enrollmentDate: { $gte: startDate }
+                }
+            },
+            {
+                $group: {
+                    _id: '$sponsorId',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $match: {
+                    _id: { $ne: null } // Filter out root placement if any
+                }
+            },
+            {
+                $sort: { count: -1 }
+            },
+            {
+                $limit: 10
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'sponsor'
+                }
+            },
+            {
+                $unwind: '$sponsor'
+            },
+            {
+                $project: {
+                    _id: 1,
+                    username: '$sponsor.username',
+                    profileImage: '$sponsor.profileImage',
+                    value: '$count'
+                }
+            }
+        ]);
+
+        // 2. Top Earners
+        const topEarners = await Commission.aggregate([
+            {
+                $unwind: '$history'
+            },
+            {
+                $match: {
+                    'history.date': { $gte: startDate },
+                    'history.amount': { $gt: 0 }
+                }
+            },
+            {
+                $group: {
+                    _id: '$userId',
+                    total: { $sum: '$history.amount' }
+                }
+            },
+            {
+                $sort: { total: -1 }
+            },
+            {
+                $limit: 10
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'user'
+                }
+            },
+            {
+                $unwind: '$user'
+            },
+            {
+                $project: {
+                    _id: 1,
+                    username: '$user.username',
+                    profileImage: '$user.profileImage',
+                    value: '$total'
+                }
+            }
+        ]);
+
+        res.json({
+            period,
+            recruiters: topRecruiters,
+            earners: topEarners
+        });
+
+    } catch (error) {
+        console.error('Leaderboard Error:', error);
+        res.status(500).json({ message: 'Failed to fetch leaderboard' });
+    }
+};

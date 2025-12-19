@@ -328,6 +328,9 @@ export const api = createApi({
       query: () => 'settings',
       providesTags: ['Settings'],
     }),
+    getLeaderboard: builder.query<any, void>({
+      query: () => '/analytics/leaderboard',
+    }),
     getPublicSettings: builder.query<Record<string, any>, void>({
       query: () => 'settings/public',
     }),
@@ -504,5 +507,6 @@ export const {
   useAddToWishlistMutation,
   useRemoveFromWishlistMutation,
   useGetAllOrdersQuery,
-  useUpdateOrderStatusMutation
+  useUpdateOrderStatusMutation,
+  useGetLeaderboardQuery
 } = api;

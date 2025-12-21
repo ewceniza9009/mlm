@@ -81,7 +81,7 @@ const Network = () => {
         title="Network Geneology"
         subtitle="Visualize and manage your downline structure."
         icon={<NetworkIcon size={24} />}
-        className="shrink-0"
+        className="shrink-0 !mb-0"
       />
       {/* ... keeping header ... */}
       <div className="flex flex-col md:flex-row justify-start items-start md:items-center shrink-0 gap-4 md:gap-6">

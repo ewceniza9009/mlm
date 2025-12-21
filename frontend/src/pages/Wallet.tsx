@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { useGetWalletQuery, useRequestWithdrawalMutation, useTransferFundsMutation } from '../store/api';
 import { Wallet as WalletIcon, ArrowUpRight, ArrowDownLeft, Search, Download, ChevronLeft, ChevronRight, ArrowUpDown, Info, Send, Users, Check, AlertCircle } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
@@ -64,10 +66,34 @@ const WalletPage = () => {
     }
   };
 
-  const handleExportCSV = () => {
-    const params = new URLSearchParams({ format: 'csv', search, sortBy, order });
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1/';
-    window.location.href = `${baseUrl}wallet?${params.toString()}`;
+  const { token } = useSelector((state: RootState) => state.auth);
+
+  const handleExportCSV = async () => {
+    try {
+      const params = new URLSearchParams({ format: 'csv', search, sortBy, order });
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1/';
+
+      const response = await fetch(`${baseUrl}wallet?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `wallet-transactions-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Export error:', err);
+      showAlert('Failed to export CSV', 'error');
+    }
   };
 
   const renderSortIcon = (field: string) => {

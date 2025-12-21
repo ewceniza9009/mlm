@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ShoppingBag, Search, Filter, ShoppingCart, Plus, Check, Eye, Heart } from 'lucide-react';
+import { ShoppingBag, Search, Filter, ShoppingCart, Plus, Check, Eye, Heart, ArrowUpRight } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { useGetShopProductsQuery, useGetWishlistQuery, useAddToWishlistMutation, useRemoveFromWishlistMutation } from '../store/api';
 import { motion } from 'framer-motion';
@@ -76,21 +76,22 @@ const ShopPage = () => {
             />
 
             {/* HERO SECTION */}
-            <div className="relative rounded-3xl overflow-hidden mb-8 bg-gradient-to-r from-teal-900 to-slate-900 shadow-xl max-h-[300px]">
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070&auto=format&fit=crop')] opacity-20 bg-cover bg-center mix-blend-overlay"></div>
-                <div className="relative p-6 md:p-10 flex flex-col items-start max-w-xl justify-center h-full">
-                    <span className="px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-bold uppercase tracking-widest border border-teal-500/30 mb-3 backdrop-blur-sm">
-                        New Collection
-                    </span>
-                    <h2 className="text-2xl md:text-3xl font-black text-white mb-3 leading-tight">
-                        Elevate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">Lifestyle</span>
-                    </h2>
-                    <p className="text-slate-300 text-sm md:text-base mb-6 max-w-md leading-relaxed line-clamp-2">
-                        Discover premium products designed to boost your personal volume and enhance your daily routine.
-                    </p>
-                    <button className="px-6 py-2.5 bg-white text-slate-900 rounded-xl font-bold hover:bg-teal-50 transition-colors shadow-lg shadow-white/10 flex items-center gap-2 group text-sm">
-                        Browse Best Sellers
-                        <Heart className="w-3 h-3 text-red-500 fill-red-500 group-hover:scale-110 transition-transform" />
+            {/* HERO SECTION - COMPACT */}
+            <div className="relative rounded-2xl overflow-hidden mb-6 bg-gradient-to-r from-indigo-900 to-slate-900 shadow-lg">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=1965&auto=format&fit=crop')] opacity-30 bg-cover bg-center mix-blend-overlay"></div>
+                <div className="relative p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6">
+                        <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-widest border border-indigo-500/30 backdrop-blur-sm w-fit">
+                            Web3
+                        </span>
+                        <h2 className="text-lg md:text-xl font-black text-white leading-tight">
+                            Unlock <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Digital Wealth</span>
+                        </h2>
+                    </div>
+
+                    <button className="px-4 py-2 bg-white text-slate-900 rounded-lg font-bold hover:bg-indigo-50 transition-colors shadow-lg shadow-white/10 flex items-center gap-2 group text-xs whitespace-nowrap">
+                        Explore Assets
+                        <ArrowUpRight className="w-3 h-3 text-indigo-600 group-hover:scale-110 transition-transform" />
                     </button>
                 </div>
             </div>
@@ -138,77 +139,77 @@ const ShopPage = () => {
                     {isLoading ? (
                         <div className="text-center py-20 text-gray-400">Loading products...</div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             {filteredProducts?.map((product: any) => (
                                 <motion.div
                                     key={product._id}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="bg-white dark:bg-[#1a1b23] rounded-3xl p-4 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-2xl hover:shadow-teal-900/10 dark:hover:shadow-black/50 transition-all duration-300 flex flex-col h-full group hover:-translate-y-1"
+                                    className="bg-white dark:bg-[#1a1b23] rounded-2xl p-3 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-lg hover:shadow-teal-900/10 dark:hover:shadow-black/50 transition-all duration-300 flex flex-col h-full group hover:-translate-y-1"
                                 >
                                     {/* Image Container - Clickable */}
                                     <div
-                                        className="aspect-square rounded-xl bg-gray-50 dark:bg-white/5 mb-4 flex items-center justify-center relative overflow-hidden cursor-pointer group/image"
+                                        className="aspect-square rounded-lg bg-gray-50 dark:bg-white/5 mb-3 flex items-center justify-center relative overflow-hidden cursor-pointer group/image"
                                         onClick={() => setSelectedProduct(product)}
                                     >
                                         {product.image ? (
                                             <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         ) : (
-                                            <ShoppingBag size={48} className="text-gray-300 dark:text-slate-600" />
+                                            <ShoppingBag size={32} className="text-gray-300 dark:text-slate-600" />
                                         )}
 
                                         {/* Quick View Overlay */}
-                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
-                                            <span className="bg-white/90 dark:bg-black/80 text-gray-900 dark:text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-2 transform translate-y-4 group-hover/image:translate-y-0 transition-transform">
-                                                <Eye size={14} /> Quick View
+                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span className="bg-white/90 dark:bg-black/80 text-gray-900 dark:text-white px-2 py-1.5 rounded-md text-[10px] font-bold flex items-center gap-1.5 transform translate-y-2 group-hover/image:translate-y-0 transition-transform shadow-sm">
+                                                <Eye size={12} /> View
                                             </span>
                                         </div>
 
                                         {/* Wishlist Button */}
                                         <button
                                             onClick={(e) => toggleWishlist(e, product._id)}
-                                            className="absolute top-2 right-2 p-2 bg-white/80 dark:bg-black/50 backdrop-blur-sm rounded-full text-gray-400 hover:text-red-500 transition-all z-10"
+                                            className="absolute top-1.5 right-1.5 p-1.5 bg-white/80 dark:bg-black/50 backdrop-blur-sm rounded-full text-gray-400 hover:text-red-500 transition-all z-10"
                                         >
-                                            <Heart size={18} className={wishlist?.some((p: any) => p._id === product._id) ? "fill-red-500 text-red-500" : ""} />
+                                            <Heart size={14} className={wishlist?.some((p: any) => p._id === product._id) ? "fill-red-500 text-red-500" : ""} />
                                         </button>
 
                                         {product.stock <= 0 && (
                                             <div className="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-[1px] flex items-center justify-center">
-                                                <span className="bg-black text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Out of Stock</span>
+                                                <span className="bg-black text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Out of Stock</span>
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Content */}
                                     <div className="flex-1 flex flex-col">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wide">
+                                        <div className="flex justify-between items-start mb-1.5">
+                                            <div className="text-[10px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wide truncate pr-2">
                                                 {product.category || 'General'}
                                             </div>
-                                            <span className="bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-slate-300 px-2 py-0.5 rounded text-[10px] font-bold">
+                                            <span className="bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-slate-300 px-1.5 py-0.5 rounded text-[9px] font-bold whitespace-nowrap">
                                                 {product.pv} PV
                                             </span>
                                         </div>
 
                                         <h3
-                                            className="font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 p-0.5 cursor-pointer hover:text-teal-500 transition-colors"
+                                            className="font-bold text-gray-900 dark:text-white text-sm mb-0.5 line-clamp-1 cursor-pointer hover:text-teal-500 transition-colors"
                                             title={product.name}
                                             onClick={() => setSelectedProduct(product)}
                                         >
                                             {product.name}
                                         </h3>
-                                        <p className="text-xs text-gray-500 dark:text-slate-400 line-clamp-2 mb-4 flex-1">{product.description}</p>
+                                        <p className="text-[11px] text-gray-500 dark:text-slate-400 line-clamp-2 mb-3 flex-1 leading-relaxed">{product.description}</p>
 
                                         <div className="flex items-center justify-between mt-auto">
-                                            <span className="text-xl font-black text-gray-900 dark:text-white">${product.price}</span>
+                                            <span className="text-base font-black text-gray-900 dark:text-white">${product.price}</span>
 
                                             <button
                                                 onClick={() => addToCart(product)}
                                                 disabled={product.stock <= 0}
-                                                className="bg-gray-900 dark:bg-white text-white dark:text-black w-10 h-10 rounded-xl flex items-center justify-center hover:bg-teal-600 dark:hover:bg-teal-400 dark:hover:text-white transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group-hover:scale-110"
+                                                className="bg-gray-900 dark:bg-white text-white dark:text-black w-8 h-8 rounded-lg flex items-center justify-center hover:bg-teal-600 dark:hover:bg-teal-400 dark:hover:text-white transition-all shadow-md active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group-hover:scale-105"
                                                 title="Add to Cart"
                                             >
-                                                <Plus size={20} />
+                                                <Plus size={16} />
                                             </button>
                                         </div>
                                     </div>

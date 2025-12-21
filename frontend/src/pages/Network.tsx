@@ -252,10 +252,9 @@ const Network = () => {
       </div>
 
       {/* Holding Tank Modal Overlay */}
-      {/* Holding Tank Modal Overlay */}
       {
         showHoldingTank && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-in fade-in duration-200">
             {/* Modal Container */}
             <div className="bg-white dark:bg-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 overflow-hidden animate-in zoom-in-95 duration-200">
               {/* Modal Header */}

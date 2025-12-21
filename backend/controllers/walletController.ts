@@ -203,11 +203,11 @@ export const getPendingWithdrawals = async (req: Request, res: Response) => {
     const pipeline: any[] = [
       // 1. Unwind transactions to treat them as individual documents
       { $unwind: '$transactions' },
-      // 2. Match only pending withdrawals
+      // 2. Match withdrawals (and optional status)
       {
         $match: {
-          'transactions.status': 'PENDING',
-          'transactions.type': 'WITHDRAWAL'
+          'transactions.type': 'WITHDRAWAL',
+          ...(req.query.status && req.query.status !== 'ALL' ? { 'transactions.status': req.query.status } : {})
         }
       },
       // 3. Lookup User Info
@@ -333,5 +333,88 @@ export const processWithdrawal = async (req: Request, res: Response) => {
 
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// P2P Transfer
+export const transferFunds = async (req: AuthRequest, res: Response) => {
+  try {
+    const senderId = req.user.id;
+    const { recipientIdentifier, amount, note } = req.body;
+
+    if (amount <= 0) {
+      return res.status(400).json({ message: 'Amount must be positive' });
+    }
+
+    // 1. Validate Sender Balance
+    const senderWallet = await Wallet.findOne({ userId: senderId });
+    if (!senderWallet || senderWallet.balance < amount) {
+      return res.status(400).json({ message: 'Insufficient balance' });
+    }
+
+    // 2. Find Recipient
+    // Allow searching by username OR email
+    const recipient = await User.findOne({
+      $or: [
+        { username: recipientIdentifier },
+        { email: recipientIdentifier }
+      ]
+    });
+
+    if (!recipient) {
+      return res.status(404).json({ message: 'Recipient not found' });
+    }
+
+    if (recipient._id.toString() === senderId) {
+      return res.status(400).json({ message: 'Cannot transfer to yourself' });
+    }
+
+    // 3. Get/Create Recipient Wallet
+    let recipientWallet = await Wallet.findOne({ userId: recipient._id });
+    if (!recipientWallet) {
+      recipientWallet = new Wallet({ userId: recipient._id, balance: 0, transactions: [] });
+    }
+
+    // 4. ATOMIC TRANSFER (Using transaction or sequence of saves)
+    // Mongo transactions are safer but require replica set. For now, sequential saves with robust error handling.
+
+    // Debit Sender
+    senderWallet.balance -= amount;
+    senderWallet.transactions.unshift({
+      type: 'TRANSFER_OUT',
+      amount: -amount,
+      date: new Date(),
+      description: `Transfer to ${recipient.username} ${note ? `(${note})` : ''}`,
+      status: 'COMPLETED'
+    } as any);
+    await senderWallet.save();
+
+    // Credit Recipient
+    recipientWallet.balance += amount;
+    recipientWallet.transactions.unshift({
+      type: 'TRANSFER_IN',
+      amount: amount,
+      date: new Date(),
+      description: `Received from ${req.user.username} ${note ? `(${note})` : ''}`,
+      status: 'COMPLETED'
+    } as any);
+    await recipientWallet.save();
+
+    // 5. Notify Recipient
+    await createNotification(
+      recipient._id.toString(),
+      'success',
+      'Funds Received',
+      `You received $${amount.toFixed(2)} from ${req.user.username}.`
+    );
+
+    res.json({
+      message: 'Transfer successful',
+      balance: senderWallet.balance
+    });
+
+  } catch (error) {
+    console.error('Transfer Error:', error);
+    res.status(500).json({ message: 'Transfer failed' });
   }
 };

@@ -67,6 +67,14 @@ export const api = createApi({
       }),
       invalidatesTags: ['Wallet'],
     }),
+    transferFunds: builder.mutation<any, { recipientIdentifier: string; amount: number; note?: string }>({
+      query: (body) => ({
+        url: 'wallet/transfer',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Wallet'],
+    }),
     updateProfile: builder.mutation({
       query: (data) => ({
         url: 'auth/profile',
@@ -458,6 +466,7 @@ export const {
   useGetDownlineQuery,
   useGetWalletQuery,
   useRequestWithdrawalMutation,
+  useTransferFundsMutation,
   useUpdateProfileMutation,
   useResolveReferrerQuery,
   useRunCommissionsMutation,

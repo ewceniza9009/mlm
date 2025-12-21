@@ -26,7 +26,7 @@ import WishlistPage from './pages/WishlistPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCommissions from './pages/AdminCommissions';
 import AdminPackages from './pages/AdminPackages';
-import AdminWithdrawalsPage from './pages/AdminWithdrawalsPage';
+import AdminPayoutsPage from './pages/AdminPayoutsPage';
 import AdminSupportPage from './pages/AdminSupportPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import AdminKYCPage from './pages/AdminKYCPage';
@@ -85,7 +85,7 @@ function App() {
           <Route path="admin" element={<AdminDashboard />} />
           <Route path="admin/commissions" element={<AdminCommissions />} />
           <Route path="admin/packages" element={<AdminPackages />} />
-          <Route path="admin/withdrawals" element={<AdminWithdrawalsPage />} />
+          <Route path="admin/payouts" element={<AdminPayoutsPage />} />
           <Route path="admin/support" element={<AdminSupportPage />} />
           <Route path="admin/users" element={<AdminUsersPage />} />
           <Route path="admin/kyc" element={<AdminKYCPage />} />

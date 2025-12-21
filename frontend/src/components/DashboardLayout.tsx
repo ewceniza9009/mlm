@@ -152,7 +152,7 @@ const DashboardLayout = () => {
                       items: [
                         { icon: CreditCard, label: 'Run Commissions', path: '/dashboard/admin/commissions' },
                         { icon: ShoppingBag, label: 'Order Management', path: '/dashboard/admin/orders' },
-                        { icon: Wallet, label: 'Withdrawals', path: '/dashboard/admin/withdrawals' }
+                        { icon: Wallet, label: 'Payout Requests', path: '/dashboard/admin/payouts' }
                       ]
                     },
                     {

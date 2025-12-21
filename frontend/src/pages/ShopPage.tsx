@@ -1,15 +1,11 @@
 import { useState, useMemo } from 'react';
-import { ShoppingBag, Search, Filter, ShoppingCart, Plus } from 'lucide-react';
+import { ShoppingBag, Search, Filter, ShoppingCart, Plus, Check, Eye, Heart } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
-import { useGetShopProductsQuery } from '../store/api';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store';
+import { useGetShopProductsQuery, useGetWishlistQuery, useAddToWishlistMutation, useRemoveFromWishlistMutation } from '../store/api';
 import { motion } from 'framer-motion';
 import { useCart } from '../components/CartContext';
 import { CartDrawer } from '../components/CartDrawer';
 import { ProductDetailsModal } from '../components/ProductDetailsModal';
-import { Eye, Heart } from 'lucide-react';
-import { useGetWishlistQuery, useAddToWishlistMutation, useRemoveFromWishlistMutation } from '../store/api';
 
 const ShopPage = () => {
     const { data: products, isLoading } = useGetShopProductsQuery({});
@@ -79,6 +75,26 @@ const ShopPage = () => {
                 }
             />
 
+            {/* HERO SECTION */}
+            <div className="relative rounded-3xl overflow-hidden mb-8 bg-gradient-to-r from-teal-900 to-slate-900 shadow-xl max-h-[300px]">
+                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070&auto=format&fit=crop')] opacity-20 bg-cover bg-center mix-blend-overlay"></div>
+                <div className="relative p-6 md:p-10 flex flex-col items-start max-w-xl justify-center h-full">
+                    <span className="px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-[10px] font-bold uppercase tracking-widest border border-teal-500/30 mb-3 backdrop-blur-sm">
+                        New Collection
+                    </span>
+                    <h2 className="text-2xl md:text-3xl font-black text-white mb-3 leading-tight">
+                        Elevate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">Lifestyle</span>
+                    </h2>
+                    <p className="text-slate-300 text-sm md:text-base mb-6 max-w-md leading-relaxed line-clamp-2">
+                        Discover premium products designed to boost your personal volume and enhance your daily routine.
+                    </p>
+                    <button className="px-6 py-2.5 bg-white text-slate-900 rounded-xl font-bold hover:bg-teal-50 transition-colors shadow-lg shadow-white/10 flex items-center gap-2 group text-sm">
+                        Browse Best Sellers
+                        <Heart className="w-3 h-3 text-red-500 fill-red-500 group-hover:scale-110 transition-transform" />
+                    </button>
+                </div>
+            </div>
+
             {/* Mobile Search - Visible only on mobile below header */}
             <div className="md:hidden mb-6 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -93,23 +109,25 @@ const ShopPage = () => {
 
             <div className="flex flex-col lg:flex-row gap-8 items-start">
 
-                {/* Category Sidebar (Desktop) or Horizontal Scroll (Mobile) */}
+                {/* Category Sidebar (Desktop) or Wrap (Mobile) */}
                 <div className="w-full lg:w-64 shrink-0 space-y-2 lg:sticky lg:top-8">
                     <div className="flex items-center gap-2 text-gray-400 dark:text-slate-500 uppercase text-xs font-bold tracking-wider mb-2">
                         <Filter size={12} /> Categories
                     </div>
-                    <div className="flex lg:flex-col gap-2 overflow-x-auto pb-4 lg:pb-0">
+                    <div className="flex flex-wrap lg:flex-col gap-2">
                         {categories.map((cat: any) => (
                             <button
                                 key={cat}
                                 onClick={() => setSelectedCategory(cat)}
-                                className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap text-left flex items-center justify-between group ${selectedCategory === cat
-                                    ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/20'
-                                    : 'bg-white dark:bg-[#1a1b23] text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-white/5 border border-transparent dark:border-transparent hover:border-gray-200 dark:hover:border-white/10'
+                                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap text-left flex items-center justify-between group ${selectedCategory === cat
+                                    ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-md shadow-teal-500/20'
+                                    : 'bg-white dark:bg-[#1a1b23] text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-white/5 border border-transparent hover:border-gray-200 dark:hover:border-white/10 hover:text-gray-900 dark:hover:text-white lg:w-full'
                                     }`}
                             >
-                                {cat}
-                                {selectedCategory === cat && <span className="bg-white/20 px-1.5 rounded text-xs">✓</span>}
+                                <span className={selectedCategory === cat ? 'translate-x-1 transition-transform' : ''}>
+                                    {cat}
+                                </span>
+                                {selectedCategory === cat && <span className="bg-white/20 p-1 rounded-full"><Check size={12} /></span>}
                             </button>
                         ))}
                     </div>
@@ -126,7 +144,7 @@ const ShopPage = () => {
                                     key={product._id}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="bg-white dark:bg-[#1a1b23] rounded-2xl p-4 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all flex flex-col h-full group"
+                                    className="bg-white dark:bg-[#1a1b23] rounded-3xl p-4 border border-gray-100 dark:border-white/5 shadow-sm hover:shadow-2xl hover:shadow-teal-900/10 dark:hover:shadow-black/50 transition-all duration-300 flex flex-col h-full group hover:-translate-y-1"
                                 >
                                     {/* Image Container - Clickable */}
                                     <div
@@ -187,7 +205,7 @@ const ShopPage = () => {
                                             <button
                                                 onClick={() => addToCart(product)}
                                                 disabled={product.stock <= 0}
-                                                className="bg-gray-900 dark:bg-white text-white dark:text-black w-10 h-10 rounded-full flex items-center justify-center hover:bg-teal-500 dark:hover:bg-teal-400 dark:hover:text-white transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                                className="bg-gray-900 dark:bg-white text-white dark:text-black w-10 h-10 rounded-xl flex items-center justify-center hover:bg-teal-600 dark:hover:bg-teal-400 dark:hover:text-white transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group-hover:scale-110"
                                                 title="Add to Cart"
                                             >
                                                 <Plus size={20} />

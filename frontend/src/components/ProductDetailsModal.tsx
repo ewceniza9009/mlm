@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Plus, Minus, ShoppingCart, CheckCircle, Heart } from 'lucide-react';
+import { X, ShoppingBag, Plus, Minus, ShoppingCart, CheckCircle, Heart, Star, ShieldCheck, Lock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCart } from './CartContext';
 import { useGetWishlistQuery, useAddToWishlistMutation, useRemoveFromWishlistMutation } from '../store/api';
@@ -35,32 +35,6 @@ export const ProductDetailsModal = ({ product, isOpen, onClose }: ProductDetails
     }, [isOpen, product]);
 
     const handleAddToCart = () => {
-        // Add item multiple times based on quantity
-        // Note: The current addToCart context might only add 1 at a time or might support quantity.
-        // Looking at CartContext: `addToCart` takes `product` and if exists adds 1.
-        // To support adding multiple, we might need to call it loop or update context.
-        // For now, let's just loop it or check if context supports it.
-        // Checking Context: `addToCart` logic is `quantity: item.quantity + 1`.
-        // So I'll call it `quantity` times or better, update context later to accept quantity.
-        // For now, I will simulate it by calling it once, but really we should refactor context.
-        // Actually, let's just add 1 for now to be safe, or loop.
-        // LOOPING IS BAD. I will just add 1 and maybe the user can increase in cart.
-        // WAIT, I should fix the context to accept quantity.
-        // But for this task, I won't Refactor context heavily.
-        // I will just add 1 as "Add to Cart". 
-        // OR: I will modify the logic here to just use the existing `addToCart` which adds 1.
-        // User can use the +/- in the modal, but if I can't pass quantity to context, then the +/- in modal is useless unless I loop.
-        // Let's rely on standard addToCart for now (add 1) and I will remove quantity selector if I can't easily support it without big refactor.
-        // ACTUALLY: I can just call addToCart multiple times? No that's hacky.
-        // Let's just keep it simple: Add to Cart adds 1 item.
-
-        // RE-READING CartContext.tsx from previous turn...
-        // `addToCart` logic: `return prev.map(item => item.id === product._id ? { ...item, quantity: item.quantity + 1 } : item);`
-        // It strictly adds 1. 
-        // I will implement a "Add multiple" logic locally by looping? No. 
-        // I will just simple call addToCart(product) and maybe ignore quantity for now in this MVP or loop it.
-        // actually, let's loop it. It's client side state, it's fine.
-
         for (let i = 0; i < quantity; i++) {
             addToCart(product);
         }
@@ -77,133 +51,194 @@ export const ProductDetailsModal = ({ product, isOpen, onClose }: ProductDetails
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-md"
                     />
 
                     {/* Modal */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.9, y: 30 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-4xl bg-white dark:bg-[#1a1b23] rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] md:h-auto"
+                        exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="relative w-full max-w-5xl bg-white dark:bg-[#0f1014] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] md:h-auto border border-white/20 dark:border-white/5"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Close Button */}
                         <button
                             onClick={onClose}
-                            className="absolute top-4 right-4 z-10 p-2 bg-white/50 dark:bg-black/50 hover:bg-white dark:hover:bg-black backdrop-blur-md rounded-full transition-all text-gray-500 hover:text-red-500"
+                            className="absolute top-5 right-5 z-20 p-2.5 bg-white/10 hover:bg-white/20 dark:bg-black/20 dark:hover:bg-black/40 backdrop-blur-md rounded-full transition-all text-gray-800 dark:text-white border border-white/20 group"
                         >
-                            <X size={20} />
+                            <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
                         </button>
 
                         {/* Image Section */}
-                        <div className="w-full md:w-1/2 bg-gray-50 dark:bg-white/5 p-8 flex items-center justify-center relative">
-                            {product.image ? (
-                                <img
-                                    src={product.image}
-                                    alt={product.name}
-                                    className="max-w-full max-h-[300px] md:max-h-[400px] object-contain drop-shadow-xl"
-                                />
-                            ) : (
-                                <ShoppingBag size={120} className="text-gray-200 dark:text-gray-700" />
-                            )}
+                        <div className="w-full md:w-1/2 relative bg-gray-50 dark:bg-[#15161c] p-10 flex items-center justify-center overflow-hidden">
+                            {/* Ambient Background Glow */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-purple-500/5 dark:from-teal-500/10 dark:to-purple-500/10" />
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-teal-500/20 rounded-full blur-[80px]" />
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ delay: 0.1, duration: 0.5 }}
+                                className="relative z-10 w-full h-full flex items-center justify-center"
+                            >
+                                {product.image ? (
+                                    <img
+                                        src={product.image}
+                                        alt={product.name}
+                                        className="max-w-full max-h-[350px] md:max-h-[450px] object-contain drop-shadow-2xl transform hover:scale-105 transition-transform duration-500"
+                                    />
+                                ) : (
+                                    <ShoppingBag size={120} className="text-gray-200 dark:text-gray-700" />
+                                )}
+                            </motion.div>
 
                             {product.stock <= 0 && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-black/50">
-                                    <span className="bg-black text-white px-6 py-2 rounded-full text-lg font-bold uppercase tracking-wider shadow-xl transform -rotate-12">
-                                        Out of Stock
+                                <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/60 dark:bg-black/60 backdrop-blur-sm">
+                                    <span className="bg-black text-white px-8 py-3 rounded-full text-xl font-black uppercase tracking-widest shadow-2xl transform -rotate-6 border-2 border-white">
+                                        Sold Out
                                     </span>
                                 </div>
                             )}
                         </div>
 
                         {/* Details Section */}
-                        <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col md:h-auto overflow-y-auto">
-                            <div className="mb-6">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <span className="text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wide text-xs bg-teal-50 dark:bg-teal-500/10 px-3 py-1 rounded-full">
+                        <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col h-full bg-white dark:bg-[#0f1014]">
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.2 }}
+                                className="flex-1 overflow-y-auto pr-2 custom-scrollbar"
+                            >
+                                <div className="flex flex-wrap items-center gap-3 mb-6">
+                                    <span className="px-4 py-1.5 rounded-full bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 text-xs font-bold uppercase tracking-wider border border-teal-100 dark:border-teal-500/20">
                                         {product.category || 'General'}
                                     </span>
-                                    <span className="text-indigo-600 dark:text-indigo-400 font-bold text-xs bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 rounded-full">
+                                    <span className="px-4 py-1.5 rounded-full bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 text-xs font-bold uppercase tracking-wider border border-purple-100 dark:border-purple-500/20 flex items-center gap-1.5">
+                                        <Star size={12} className="fill-purple-700 dark:fill-purple-300" />
                                         {product.pv} PV
                                     </span>
                                 </div>
 
-                                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 leading-tight">
+                                <h2 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 leading-[1.1] tracking-tight">
                                     {product.name}
                                 </h2>
 
-                                <div className="text-3xl font-black text-gray-900 dark:text-white mb-6">
-                                    ${product.price}
+                                <div className="flex items-center gap-6 mb-8">
+                                    <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+                                        ${product.price}
+                                    </div>
+                                    {product.oldPrice && (
+                                        <div className="text-xl text-gray-400 line-through decoration-2">
+                                            ${product.oldPrice}
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="prose dark:prose-invert text-sm text-gray-600 dark:text-slate-400 mb-8 leading-relaxed">
-                                    {product.description || "No description available for this product."}
+                                <div className="prose dark:prose-invert prose-lg text-gray-600 dark:text-slate-400 mb-8 leading-relaxed">
+                                    {product.description || "Experience premium quality with this exclusive product. Designed to enhance your lifestyle and boost your business volume."}
                                 </div>
-                            </div>
 
-                            <div className="mt-auto space-y-6">
-                                {/* Wishlist Toggle (Desktop Position or near Actions) */}
-                                <button
-                                    onClick={toggleWishlist}
-                                    className={`flex items-center gap-2 text-sm font-bold ${isWishlisted ? 'text-red-500' : 'text-gray-400 hover:text-red-500'} transition-colors mb-4`}
-                                >
-                                    <Heart size={18} className={isWishlisted ? "fill-red-500" : ""} />
-                                    {isWishlisted ? 'Saved to Wishlist' : 'Add to Wishlist'}
-                                </button>
-                                {/* Quantity & Actions */}
+                                {/* Features / Trust Badges */}
+                                <div className="grid grid-cols-2 gap-4 mb-8">
+                                    <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
+                                        <div className="p-2 bg-blue-100 dark:bg-blue-500/20 rounded-lg text-blue-600 dark:text-blue-400">
+                                            <ShieldCheck size={20} />
+                                        </div>
+                                        <div>
+                                            <div className="text-xs font-bold uppercase text-gray-400 dark:text-gray-500 tracking-wider">Guarantee</div>
+                                            <div className="text-sm font-bold text-gray-900 dark:text-white">Authentic</div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
+                                        <div className="p-2 bg-green-100 dark:bg-green-500/20 rounded-lg text-green-600 dark:text-green-400">
+                                            <Lock size={20} />
+                                        </div>
+                                        <div>
+                                            <div className="text-xs font-bold uppercase text-gray-400 dark:text-gray-500 tracking-wider">Secure</div>
+                                            <div className="text-sm font-bold text-gray-900 dark:text-white">Encrypted Checkout</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="mt-6 pt-6 border-t border-gray-100 dark:border-white/10"
+                            >
                                 {product.stock > 0 ? (
-                                    <div className="flex flex-col sm:flex-row gap-4">
-                                        <div className="flex items-center bg-gray-100 dark:bg-white/5 rounded-xl border border-gray-200 dark:border-white/10 w-fit">
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quantity</label>
+
                                             <button
-                                                onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                                className="p-3 md:p-4 hover:text-teal-500 transition-colors"
+                                                onClick={toggleWishlist}
+                                                className={`flex items-center gap-2 text-sm font-bold transition-colors ${isWishlisted ? 'text-red-500' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                                             >
-                                                <Minus size={18} />
-                                            </button>
-                                            <span className="font-bold w-8 text-center text-lg">{quantity}</span>
-                                            <button
-                                                onClick={() => setQuantity(q => q + 1)} // Could cap at stock
-                                                className="p-3 md:p-4 hover:text-teal-500 transition-colors"
-                                            >
-                                                <Plus size={18} />
+                                                <Heart size={18} className={isWishlisted ? "fill-red-500" : ""} />
+                                                {isWishlisted ? 'Saved' : 'Save for later'}
                                             </button>
                                         </div>
 
-                                        <button
-                                            onClick={handleAddToCart}
-                                            disabled={isAdded}
-                                            className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-lg transition-all transform active:scale-95 ${isAdded
-                                                ? 'bg-green-500 text-white shadow-lg shadow-green-500/20'
-                                                : 'bg-gray-900 dark:bg-white text-white dark:text-black hover:bg-teal-500 dark:hover:bg-teal-400 dark:hover:text-white shadow-xl'
-                                                }`}
-                                        >
-                                            {isAdded ? (
-                                                <>
-                                                    <CheckCircle size={24} />
-                                                    Added to Cart
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <ShoppingCart size={24} />
-                                                    Add to Cart
-                                                </>
-                                            )}
-                                        </button>
+                                        <div className="flex gap-4">
+                                            <div className="flex items-center bg-gray-100 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/10 h-14">
+                                                <button
+                                                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                                                    className="w-12 h-full flex items-center justify-center hover:text-teal-500 transition-colors"
+                                                >
+                                                    <Minus size={18} />
+                                                </button>
+                                                <span className="font-bold w-8 text-center text-lg">{quantity}</span>
+                                                <button
+                                                    onClick={() => setQuantity(q => q + 1)}
+                                                    className="w-12 h-full flex items-center justify-center hover:text-teal-500 transition-colors"
+                                                >
+                                                    <Plus size={18} />
+                                                </button>
+                                            </div>
+
+                                            <button
+                                                onClick={handleAddToCart}
+                                                disabled={isAdded}
+                                                className={`flex-1 flex items-center justify-center gap-3 h-14 rounded-2xl font-bold text-lg transition-all shadow-lg active:scale-[0.98] ${isAdded
+                                                    ? 'bg-green-500 text-white shadow-green-500/25'
+                                                    : 'bg-gradient-to-r from-gray-900 to-gray-800 dark:from-white dark:to-gray-200 text-white dark:text-black hover:shadow-xl hover:shadow-teal-500/10 dark:hover:shadow-white/10'
+                                                    }`}
+                                            >
+                                                {isAdded ? (
+                                                    <>
+                                                        <CheckCircle size={24} />
+                                                        <span>Added to Cart</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <ShoppingCart size={24} />
+                                                        <span>Add to Cart</span>
+                                                        <span className="bg-white/20 dark:bg-black/10 px-2 py-0.5 rounded text-sm font-medium ml-1">
+                                                            ${(product.price * quantity).toFixed(2)}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                 ) : (
-                                    <button disabled className="w-full py-4 bg-gray-200 dark:bg-white/10 text-gray-400 dark:text-gray-500 rounded-xl font-bold cursor-not-allowed">
-                                        Unavailable
+                                    <button disabled className="w-full h-14 bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-gray-500 rounded-2xl font-bold text-lg cursor-not-allowed flex items-center justify-center gap-2 border border-gray-200 dark:border-white/10">
+                                        <ShoppingCart size={20} className="opacity-50" />
+                                        Currently Unavailable
                                     </button>
                                 )}
-                            </div>
+                            </motion.div>
                         </div>
                     </motion.div>
                 </div>
@@ -211,3 +246,4 @@ export const ProductDetailsModal = ({ product, isOpen, onClose }: ProductDetails
         </AnimatePresence>
     );
 };
+

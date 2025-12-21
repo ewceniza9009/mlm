@@ -15,6 +15,7 @@ import RankProgress from '../components/RankProgress';
 import ProfitOptimizer from '../components/ProfitOptimizer';
 import Leaderboard from '../components/Leaderboard';
 import FomoAlerts from '../components/FomoAlerts';
+import TaskWidget from '../components/TaskWidget';
 
 const DashboardHome = () => {
   const { showAlert } = useUI();
@@ -202,6 +203,12 @@ const DashboardHome = () => {
 
             {/* RIGHT COLUMN (1/3 Width) - Action Stack */}
             <div className="space-y-6">
+
+              {/* CRM / Smart Tasks Widget */}
+              <div className="h-auto">
+                <TaskWidget />
+              </div>
+
               {/* Profit Optimizer / Start Your Engines */}
               <div className="h-auto">
                 <ProfitOptimizer

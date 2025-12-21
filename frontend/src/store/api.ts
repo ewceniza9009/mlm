@@ -13,7 +13,7 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ['User', 'Wallet', 'Tree', 'Packages', 'Tickets', 'Withdrawals', 'Admin', 'SystemLogs', 'Notifications', 'Settings', 'Products', 'Wishlist'],
+  tagTypes: ['User', 'Wallet', 'Tree', 'Packages', 'Tickets', 'Withdrawals', 'Admin', 'SystemLogs', 'Notifications', 'Settings', 'Products', 'Wishlist', 'Tasks'],
   endpoints: (builder) => ({
     getTree: builder.query({
       query: (rootId) => `network/tree${rootId ? `?rootId=${rootId}` : ''}`,
@@ -453,6 +453,19 @@ export const api = createApi({
       }),
       invalidatesTags: ['Admin', 'Wallet', 'Tree']
     }),
+    // CRM Tasks
+    getTasks: builder.query({
+      query: () => 'tasks',
+      providesTags: ['Tasks'],
+    }),
+    updateTaskStatus: builder.mutation({
+      query: ({ taskId, status }) => ({
+        url: `tasks/${taskId}/status`,
+        method: 'PATCH',
+        body: { status },
+      }),
+      invalidatesTags: ['Tasks'],
+    }),
   }),
 });
 
@@ -526,5 +539,7 @@ export const {
   useRemoveFromWishlistMutation,
   useGetAllOrdersQuery,
   useUpdateOrderStatusMutation,
-  useGetLeaderboardQuery
+  useGetLeaderboardQuery,
+  useGetTasksQuery,
+  useUpdateTaskStatusMutation
 } = api;

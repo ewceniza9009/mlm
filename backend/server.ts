@@ -50,6 +50,8 @@ import securityRoutes from './routes/securityRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import settingsRoutes from './routes/settingsRoutes';
 
+import taskRoutes from './routes/taskRoutes';
+
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/network', genealogyRoutes);
 app.use('/api/v1/admin', adminRoutes);
@@ -62,6 +64,7 @@ app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/settings', settingsRoutes);
 app.use('/api/v1/shop', productRoutes);
 app.use('/api/v1/orders', orderRoutes);
+app.use('/api/v1/tasks', taskRoutes);
 
 // Serve uploads statically
 app.use('/uploads', express.static('uploads'));

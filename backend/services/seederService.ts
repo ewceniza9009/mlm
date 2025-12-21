@@ -120,7 +120,17 @@ const seedSettings = async () => {
     { key: 'enableShop', value: true, description: 'Enable product shop' },
     { key: 'enablePublicShop', value: true, description: 'Enable public retail shop' },
     { key: 'shopFirstEnrollment', value: true, description: 'Enable Shop First flow' },
-    { key: 'shopFirstHoldingTank', value: true, description: 'Enable Holding Tank for Shop First' }
+    { key: 'shopFirstHoldingTank', value: true, description: 'Enable Holding Tank for Shop First' },
+    {
+      key: 'rankRequirements',
+      value: {
+        "Bronze": { "earnings": 0, "recruits": 0 },
+        "Silver": { "earnings": 1000, "recruits": 2 },
+        "Gold": { "earnings": 5000, "recruits": 5 },
+        "Diamond": { "earnings": 20000, "recruits": 10 }
+      },
+      description: 'Requirements for each rank'
+    }
   ]);
   console.log('   - Created System Settings');
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGetSettingsQuery, useUpdateSettingMutation } from '../store/api';
-import { Settings, Shield, CheckCircle2, AlertTriangle, ShoppingBag } from 'lucide-react';
+import { Settings, Shield, CheckCircle2, AlertTriangle, ShoppingBag, TrendingUp } from 'lucide-react';
 
 const AdminSettingsPage = () => {
     const { data: settings, isLoading } = useGetSettingsQuery();
@@ -14,6 +14,13 @@ const AdminSettingsPage = () => {
     const [shopFirstHoldingTank, setShopFirstHoldingTank] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
 
+    // Rank Requirements State
+    const [rankReqs, setRankReqs] = useState<any>({
+        "Silver": { "earnings": 1000, "recruits": 2 },
+        "Gold": { "earnings": 5000, "recruits": 5 },
+        "Diamond": { "earnings": 20000, "recruits": 10 }
+    });
+
     useEffect(() => {
         if (settings) {
             setRequireKYC(settings.withdrawals_require_kyc === true);
@@ -21,8 +28,36 @@ const AdminSettingsPage = () => {
             setEnablePublicShop(settings.enablePublicShop === true);
             setShopFirstEnrollment(settings.shopFirstEnrollment === true);
             setShopFirstHoldingTank(settings.shopFirstHoldingTank === true);
+
+            if (settings.rankRequirements) {
+                setRankReqs(settings.rankRequirements);
+            }
         }
     }, [settings]);
+
+    // Handler for updating nested rank objects locally
+    const handleRankReqChange = (rank: string, field: string, value: number) => {
+        setRankReqs((prev: any) => ({
+            ...prev,
+            [rank]: {
+                ...prev[rank],
+                [field]: isNaN(value) ? 0 : Math.max(0, value)
+            }
+        }));
+    };
+
+    // Handler to save the entire rankRequirements object to backend
+    const handleSaveRankReqs = async () => {
+        try {
+            await updateSetting({ key: 'rankRequirements', value: rankReqs }).unwrap();
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        } catch (error) {
+            console.error('Failed to update rank requirements', error);
+        }
+    };
+
+
 
     const handleToggleKYC = async () => {
         const newValue = !requireKYC;
@@ -274,16 +309,69 @@ const AdminSettingsPage = () => {
                                 </p>
                             </div>
                         )}
-
-                        {/* Success Message toast */}
-                        {showSuccess && (
-                            <div className="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-bounce-in">
-                                <CheckCircle2 size={18} /> Settings Saved
-                            </div>
-                        )}
-
                     </div>
                 </div>
+
+                {/* Rank Requirements Configuration */}
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 dark:border-slate-700">
+                        <div className="flex items-center gap-3">
+                            <TrendingUp className="text-amber-500" size={24} />
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Rank Requirements</h2>
+                                <p className="text-xs text-gray-500 dark:text-slate-400">Set targets for automation.</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={handleSaveRankReqs}
+                            disabled={isUpdating}
+                            className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
+                        >
+                            Save Changes
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {['Silver', 'Gold', 'Diamond'].map((rank) => (
+                            <div key={rank} className="bg-gray-50 dark:bg-slate-700/30 rounded-xl p-4 border border-gray-100 dark:border-slate-700">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className={`p-1.5 rounded-lg ${rank === 'Diamond' ? 'bg-cyan-100 text-cyan-600' : rank === 'Gold' ? 'bg-yellow-100 text-yellow-600' : 'bg-slate-200 text-slate-600'}`}>
+                                        <Shield size={16} className="fill-current" />
+                                    </div>
+                                    <h3 className="font-bold text-gray-900 dark:text-white">{rank}</h3>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Earnings Target ($)</label>
+                                        <input
+                                            type="number"
+                                            value={rankReqs[rank]?.earnings || 0}
+                                            onChange={(e) => handleRankReqChange(rank, 'earnings', parseInt(e.target.value) || 0)}
+                                            className="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider block mb-1">Direct Recruits</label>
+                                        <input
+                                            type="number"
+                                            value={rankReqs[rank]?.recruits || 0}
+                                            onChange={(e) => handleRankReqChange(rank, 'recruits', parseInt(e.target.value) || 0)}
+                                            className="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Success Message toast */}
+                {showSuccess && (
+                    <div className="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-bounce-in z-50">
+                        <CheckCircle2 size={18} /> Settings Saved
+                    </div>
+                )}
 
                 {/* More settings sections can go here (e.g., General, Fees, etc.) */}
 

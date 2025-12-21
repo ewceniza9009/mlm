@@ -127,17 +127,11 @@ const DashboardHome = () => {
               {/* @ts-ignore */}
               {
                 myDetails?.stats?.rankProgress && (
-                  <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-800">
-                    {/* @ts-ignore */}
-                    <RankProgress
-                      currentRank={user?.rank || 'Bronze'}
-                      nextRank={myDetails.stats.rankProgress.nextRank}
-                      progress={myDetails.stats.rankProgress.percent}
-                      amountNeeded={myDetails.stats.rankProgress.amountNeeded}
-                      currentEarnings={myDetails.stats.rankProgress.current}
-                      targetEarnings={myDetails.stats.rankProgress.target}
-                    />
-                  </div>
+                  // @ts-ignore
+                  <RankProgress
+                    currentRank={user?.rank || 'Bronze'}
+                    data={myDetails.stats.rankProgress}
+                  />
                 )
               }
 

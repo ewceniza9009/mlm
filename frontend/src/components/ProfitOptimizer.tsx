@@ -110,19 +110,25 @@ const ProfitOptimizer: React.FC<ProfitOptimizerProps> = ({
                         </div>
                     </div>
 
-                    {/* Visual Balance Bar */}
+                    {/* Payout Unlock Progress */}
                     <div className="space-y-2">
                         <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-slate-400">
-                            <span>Left: {leftPV}</span>
-                            <span>Right: {rightPV}</span>
+                            <span>{targetLeg} Leg Goal</span>
+                            <span className={weakLegPV > 0 ? "text-indigo-600 dark:text-indigo-400" : ""}>{Math.round((weakLegPV / Math.max(pairUnit, strongLegPV)) * 100)}%</span>
                         </div>
-                        <div className="h-2 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden flex">
+                        <div className="h-3 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden border border-gray-200 dark:border-slate-600">
                             <motion.div
-                                initial={{ width: "50%" }}
-                                animate={{ width: `${(leftPV / (leftPV + rightPV)) * 100}%` }}
-                                className="bg-teal-500 h-full"
-                            />
-                            <div className="bg-indigo-500 h-full flex-1" />
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(weakLegPV / Math.max(pairUnit, strongLegPV)) * 100}%` }}
+                                transition={{ duration: 1 }}
+                                className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full relative"
+                            >
+                                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                            </motion.div>
+                        </div>
+                        <div className="flex justify-between text-[10px] text-gray-400 font-mono mt-1">
+                            <span>Current: {weakLegPV} PV</span>
+                            <span>Target: {Math.max(pairUnit, strongLegPV)} PV</span>
                         </div>
                     </div>
                 </div>

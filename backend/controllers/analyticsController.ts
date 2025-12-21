@@ -241,40 +241,30 @@ export const getFomoAlerts = async (req: Request, res: Response) => {
 
         const alerts = [];
 
-        // ALERT 1: Inactive but has Volume (Missed Commission Risk)
-        // If user is not active, but has volume on both legs, they would cycle if they were active.
+        // Alert 1: Commission Risk (Inactive with Volume)
         if (!user.isActive && user.currentLeftPV > 0 && user.currentRightPV > 0) {
-            const potentialPairs = Math.min(Math.floor(user.currentLeftPV / 100), Math.floor(user.currentRightPV / 100)); // Assuming 100 unit
-            const potentialLoss = potentialPairs * 10; // Assuming $10 per pair
+            const potentialPairs = Math.min(Math.floor(user.currentLeftPV / 100), Math.floor(user.currentRightPV / 100)); // 100 PV = 1 Pair
+            const potentialLoss = potentialPairs * 10; // $10 per pair
 
             if (potentialPairs > 0) {
                 alerts.push({
                     type: 'INACTIVE_LOSS',
                     severity: 'critical',
                     title: 'Commission Risk!',
-                    message: `You are currently INACTIVE. You have ${potentialPairs} pairs matching ($${potentialLoss}) that you cannot claim until you reactivate!`,
+                    message: `You are INACTIVE. Reactivate now to claim $${potentialLoss} in pending commissions!`,
                     actionLabel: 'Reactivate Now',
                     actionUrl: '/shop'
                 });
             }
         }
 
-        // ALERT 2: Pending KYC (Withdrawal Block)
-        // Check wallet balance
-        const Commission = mongoose.model('Commission'); // Dynamic import to avoid circular dep if needed, or use imported model
-        // Actually we need Wallet model for balance, but Commission model tracks earnings. 
-        // Let's use Commission.totalEarned as a proxy for "You have money" or just check Wallet if available.
-        // For now, let's use the aggregated Commission stats or import Wallet.
-
-        // Simpler: Just check if they have volume but no KYC, preventing future withdrawals?
-        // Or if they have rank advancement close?
-
+        // Alert 2: Withdrawal Risk (High Volume, No KYC)
         if (user.kycStatus !== 'approved' && (user.currentLeftPV > 500 || user.currentRightPV > 500)) {
             alerts.push({
                 type: 'KYC_PENDING',
                 severity: 'warning',
                 title: 'Verify Your Identity',
-                message: 'You are building significant volume! Verify your identity now to ensure you can withdraw future commissions without delay.',
+                message: 'High volume detected. Verify ID to ensure future withdrawals.',
                 actionLabel: 'Upload ID',
                 actionUrl: '/settings?tab=kyc'
             });

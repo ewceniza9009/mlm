@@ -250,6 +250,11 @@ export const searchDownline = async (req: Request, res: Response) => {
   }
 };
 
+// Helper for getting settings (imported or defined locally if simpler to avoid circular deps)
+import SystemSetting from '../models/SystemSetting';
+
+// ... (other imports remain at top)
+
 // Get Member Details
 export const getMemberDetails = async (req: Request, res: Response) => {
   try {
@@ -267,8 +272,6 @@ export const getMemberDetails = async (req: Request, res: Response) => {
     }
 
     // Security check: Ensure member is in downline (or is self)
-    // We can check if member.path contains currentUserId or if member._id === currentUserId
-    // Also allow admin to view anyone
     // @ts-ignore
     const requestor = await User.findById(currentUserId);
 
@@ -284,6 +287,15 @@ export const getMemberDetails = async (req: Request, res: Response) => {
     const commission = await Commission.findOne({ userId: memberId });
     const directRecruitsCount = await User.countDocuments({ sponsorId: memberId });
     const totalTeamSize = await User.countDocuments({ path: { $regex: `,${memberId},` } });
+
+    // Fetch Rank Requirements
+    const settings = await SystemSetting.findOne({ key: 'rankRequirements' });
+    const rankReqs = settings ? settings.value : {
+      "Bronze": { "earnings": 0, "recruits": 0 },
+      "Silver": { "earnings": 1000, "recruits": 2 },
+      "Gold": { "earnings": 5000, "recruits": 5 },
+      "Diamond": { "earnings": 20000, "recruits": 10 }
+    };
 
     res.json({
       profile: {
@@ -305,11 +317,11 @@ export const getMemberDetails = async (req: Request, res: Response) => {
         currentLeftPV: member.currentLeftPV,
         currentRightPV: member.currentRightPV,
         personalPV: member.personalPV || 0,
-        groupVolume: (member.currentLeftPV || 0) + (member.currentRightPV || 0), // Added Group Volume
+        groupVolume: (member.currentLeftPV || 0) + (member.currentRightPV || 0),
         totalEarned: commission ? commission.totalEarned : 0,
         directRecruits: directRecruitsCount,
         teamSize: totalTeamSize,
-        rankProgress: calculateRankProgress(member.rank, commission ? commission.totalEarned : 0)
+        rankProgress: calculateRankProgress(member.rank, commission ? commission.totalEarned : 0, directRecruitsCount, rankReqs)
       }
     });
 
@@ -320,68 +332,54 @@ export const getMemberDetails = async (req: Request, res: Response) => {
 };
 
 // Helper: Calculate Rank Progress
-const calculateRankProgress = (currentRank: string, totalEarned: number) => {
-  let nextRank = 'Max Rank';
-  let target = 0;
-  let prevTarget = 0;
+const calculateRankProgress = (currentRank: string, totalEarned: number, recruits: number, rules: any) => {
+  const ranks = ['Bronze', 'Silver', 'Gold', 'Diamond'];
+  let currentIndex = ranks.indexOf(currentRank);
 
-  switch (currentRank) {
-    case 'Bronze':
-      nextRank = 'Silver';
-      target = 1000;
-      prevTarget = 0;
-      break;
-    case 'Silver':
-      nextRank = 'Gold';
-      target = 5000;
-      prevTarget = 1000;
-      break;
-    case 'Gold':
-      nextRank = 'Diamond';
-      target = 20000;
-      prevTarget = 5000;
-      break;
-    case 'Diamond':
-      // Fix: If user is Diamond (e.g. Admin or manual grant) but hasn't earned the target, 
-      // show actual progress towards the financial target instead of 100% "Pinnacle".
-      if (totalEarned < 20000) {
-        return {
-          nextRank: 'Diamond',
-          target: 20000,
-          current: totalEarned,
-          percent: parseFloat(((totalEarned / 20000) * 100).toFixed(1)),
-          amountNeeded: 20000 - totalEarned
-        };
-      }
-      return {
-        nextRank: 'Diamond',
-        target: 20000,
-        current: totalEarned,
-        percent: 100,
-        amountNeeded: 0
-      };
-    default:
-      // Fallback or custom ranks
-      nextRank = 'Unknown';
-      target = 1000;
+  // Handle unknown/Member ranks as Bronze (Start of journey)
+  if (currentIndex === -1) {
+    currentIndex = 0;
   }
 
-  // Calculate percentage relative to the *gap* between ranks? 
-  // Or absolute from 0? Usually absolute from 0 is clearer for "Total Earnings".
-  // Let's do absolute % for simpler "Road to X".
+  // If max rank
+  if (currentIndex === ranks.length - 1) {
+    return {
+      nextRank: 'Max Rank',
+      current: { earnings: totalEarned, recruits },
+      target: { earnings: 0, recruits: 0 },
+      percent: 100,
+      isCompleted: true
+    };
+  }
 
-  let percent = (totalEarned / target) * 100;
-  if (percent > 100) percent = 100;
+  const nextRank = ranks[currentIndex + 1];
+  const nextReq = rules[nextRank] || { earnings: 999999, recruits: 999 };
 
-  // Amount needed
-  const amountNeeded = Math.max(0, target - totalEarned);
+  // Calculate Progress Logic
+  // We can treat progress as an average of requirements or the lowest bottleneck.
+  // "Road to Legend" usually shows the *lowest* filled bucket (the bottleneck).
+
+  const earningsPct = Math.min(100, (totalEarned / nextReq.earnings) * 100);
+  const recruitsPct = Math.min(100, (recruits / nextReq.recruits) * 100);
+
+  // Overall percent is the average or minimum? Minimum is stricter/better for "what's missing".
+  // But for a visual bar, average feels more rewarding. 
+  // Let's us Minimum for "Completion" logic, but Average for "Progress Bar"? 
+  // Actually, visual bars for composite goals usually show the *lowest* % to indicate how far away the *next* milestone is.
+  const overallPercent = Math.min(earningsPct, recruitsPct);
 
   return {
     nextRank,
-    target,
-    current: totalEarned,
-    percent: parseFloat(percent.toFixed(1)),
-    amountNeeded
+    target: {
+      earnings: nextReq.earnings,
+      recruits: nextReq.recruits
+    },
+    current: {
+      earnings: totalEarned,
+      recruits
+    },
+    percent: parseFloat(overallPercent.toFixed(1)),
+    requirements: nextReq
   };
 };
 

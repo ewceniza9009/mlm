@@ -4,7 +4,7 @@ import PageHeader from '../components/PageHeader';
 import HoldingTank from '../components/HoldingTank';
 import NetworkNodeModal from '../components/NetworkNodeModal'; // Import
 import NetworkStatsOverlay from '../components/NetworkStatsOverlay';
-import { Search, Filter, ZoomIn, ZoomOut, Download, List, ArrowUp, Grid, Network as NetworkIcon } from 'lucide-react';
+import { Search, Filter, ZoomIn, ZoomOut, Download, List, ArrowUp, Grid, Network as NetworkIcon, Flame } from 'lucide-react';
 import { useLazySearchDownlineQuery, useGetTreeQuery, useGetUplineQuery } from '../store/api';
 import ListView from '../components/genealogy/ListView';
 import MatrixTree from '../components/genealogy/MatrixTree';
@@ -36,6 +36,9 @@ const Network = () => {
   }, {
     skip: viewMode === 'downline' || !rootId
   });
+
+  /* New Heatmap Toggle State */
+  const [isHeatmapMode, setIsHeatmapMode] = useState(false);
 
   // Determine which data to use based on view mode
   // 'matrix' view is just a different visual of the 'downline' data
@@ -143,6 +146,27 @@ const Network = () => {
               <ArrowUp size={14} />
               Upline
             </button>
+
+            {/* Divider */}
+            <div className="w-px h-6 bg-gray-300 dark:bg-slate-600 mx-1"></div>
+
+            {/* Heatmap Toggle (Only in Tree/Upline modes) */}
+            {(viewMode === 'downline' || viewMode === 'upline') && (
+              <button
+                onClick={() => setIsHeatmapMode(!isHeatmapMode)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${isHeatmapMode
+                  ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-sm'
+                  : 'text-gray-500 dark:text-slate-400 hover:bg-white/50 dark:hover:bg-slate-600'
+                  }`}
+                title="Toggle Momentum Heatmap"
+              >
+                <div className={`${isHeatmapMode ? 'animate-pulse' : ''}`}>
+                  <Flame size={14} fill={isHeatmapMode ? "currentColor" : "none"} />
+                </div>
+                Heatmap
+              </button>
+            )}
+
           </div>
         </div>
 
@@ -300,6 +324,7 @@ const Network = () => {
             isLoading={isTreeLoading}
             error={treeError}
             onNodeClick={(id) => setViewingMemberId(id)}
+            isHeatmapMode={isHeatmapMode}
           />
         )}
       </div>

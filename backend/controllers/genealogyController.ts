@@ -39,11 +39,48 @@ interface TreeNode {
     leftPV?: number;
     rightPV?: number;
     personalPV?: number;
-    groupVolume?: number; // Added field
-    totalEarned?: number; // Added field
+    groupVolume?: number;
+    totalEarned?: number;
+    heat: number; // 0-100 score for Heatmap
   };
   children: TreeNode[];
 }
+
+const calculateHeat = async (node: IUser): Promise<number> => {
+  if (!node.isActive) return 0;
+
+  let score = 0;
+
+  // 1. Recency (Momentum) - Max 30 pts
+  // New members within 7 days get full points, degrading over 30 days
+  const daysSinceJoined = Math.floor((Date.now() - new Date(node.enrollmentDate).getTime()) / (1000 * 60 * 60 * 24));
+  if (daysSinceJoined <= 7) score += 30;
+  else if (daysSinceJoined <= 30) score += 15;
+
+  // 2. Personal Production (Sales) - Max 40 pts
+  const pv = node.personalPV || 0;
+  if (pv >= 500) score += 40;       // Super Seller
+  else if (pv >= 200) score += 30;  // High Performer
+  else if (pv >= 100) score += 20;  // Standard Active
+  else if (pv > 0) score += 10;     // Minimum Activity
+
+  // 3. Recruitment Activity (Growth) - Max 30 pts
+  // Check for recent recruits in the last 30 days
+  // Note: This requires a DB lookup, so we make this function async
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const recentRecruits = await User.countDocuments({
+    sponsorId: node._id,
+    enrollmentDate: { $gte: thirtyDaysAgo }
+  });
+
+  if (recentRecruits >= 5) score += 30;      // Massive growth
+  else if (recentRecruits >= 3) score += 20; // Strong growth
+  else if (recentRecruits >= 1) score += 10; // Active builder
+
+  return Math.min(100, score);
+};
 
 const buildTree = async (node: IUser, depth: number): Promise<TreeNode | null> => {
   if (depth < 0 || !node) return null;
@@ -61,7 +98,8 @@ const buildTree = async (node: IUser, depth: number): Promise<TreeNode | null> =
       rightPV: node.currentRightPV || 0,
       personalPV: node.personalPV || 0,
       groupVolume: (node.currentLeftPV || 0) + (node.currentRightPV || 0), // Added Group Volume
-      totalEarned: commission ? commission.totalEarned : 0 // Include total earnings
+      totalEarned: commission ? commission.totalEarned : 0, // Include total earnings
+      heat: await calculateHeat(node)
     },
     children: []
   };
@@ -208,7 +246,8 @@ const buildUplineNode = async (user: IUser, childNode?: TreeNode | null): Promis
       leftPV: user.currentLeftPV || 0,
       rightPV: user.currentRightPV || 0,
       groupVolume: (user.currentLeftPV || 0) + (user.currentRightPV || 0),
-      totalEarned: commission ? commission.totalEarned : 0
+      totalEarned: commission ? commission.totalEarned : 0,
+      heat: await calculateHeat(user)
     },
     children: childNode ? [childNode] : []
   };

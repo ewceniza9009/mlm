@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import Tree from 'react-d3-tree';
-import { User, Crown, Star, Shield, Sparkles, Award } from 'lucide-react';
+import { User, Crown, Star, Shield, Sparkles, Award, Flame, Snowflake } from 'lucide-react';
 
 interface TreeVisualizerProps {
   data: any;
   isLoading: boolean;
   error: any;
   onNodeClick?: (nodeId: string) => void;
+  isHeatmapMode?: boolean;
 }
 
-const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeVisualizerProps) => {
+const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick, isHeatmapMode = false }: TreeVisualizerProps) => {
   // Config removed fetch logic
 
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
@@ -25,6 +26,7 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
     const rank = nodeDatum.attributes?.rank || 'Member';
     const isOnline = nodeDatum.attributes?.active;
     const isRoot = treeData && nodeDatum.attributes?.id === treeData.attributes?.id;
+    const heat = nodeDatum.attributes?.heat || 0;
 
     // Rank Styles Configuration
     const getRankStyles = (r: string) => {
@@ -62,14 +64,51 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
       }
     };
 
-    const style = getRankStyles(rank);
+    // Heatmap Styles Configuration
+    const getHeatStyles = (h: number) => {
+      // Inactive is always Cold/Blue-Grey unless we want to show "Ghost" nodes
+      if (!isOnline) return {
+        bg: 'bg-slate-200 dark:bg-slate-800',
+        shadow: 'shadow-none',
+        border: 'border-slate-300',
+        icon: <Snowflake size={16} className="text-slate-400" />
+      };
 
-    // Inactive Override
-    const cardBg = !isOnline
+      if (h >= 80) return {
+        bg: 'bg-gradient-to-br from-red-500 to-orange-600',
+        shadow: 'shadow-red-500/50',
+        border: 'border-red-500',
+        icon: <Flame size={16} className="text-white animate-pulse" fill="currentColor" />
+      }; else if (h >= 50) return {
+        bg: 'bg-gradient-to-br from-orange-400 to-amber-500',
+        shadow: 'shadow-orange-500/50',
+        border: 'border-orange-400',
+        icon: <Flame size={16} className="text-white" />
+      }; else if (h > 0) return {
+        bg: 'bg-gradient-to-br from-blue-400 to-indigo-500',
+        shadow: 'shadow-blue-500/50',
+        border: 'border-blue-400',
+        icon: <User size={16} className="text-white" />
+      }; else { // Active but 0 heat
+        return {
+          bg: 'bg-gradient-to-br from-slate-400 to-slate-500',
+          shadow: 'shadow-slate-500/50',
+          border: 'border-slate-400',
+          icon: <User size={16} className="text-white" />
+        };
+      }
+    };
+
+    const style = isHeatmapMode ? getHeatStyles(heat) : getRankStyles(rank);
+
+    // Inactive Visual Override
+    // logic: If HeatmapMode, we rely on getHeatStyles for the color (active=hot, inactive=cold).
+    // If NOT HeatmapMode (Rank Mode), we explicitly grey out inactive users.
+    const cardBg = (!isOnline && !isHeatmapMode)
       ? 'bg-gray-100 dark:bg-slate-900 opacity-75 grayscale'
-      : 'bg-white dark:bg-slate-800';
+      : (isHeatmapMode && !isOnline ? 'bg-slate-100 dark:bg-slate-900 grayscale opacity-60' : 'bg-white dark:bg-slate-800');
 
-    const cardBorder = !isOnline
+    const cardBorder = (!isOnline && !isHeatmapMode)
       ? 'border-gray-300 dark:border-slate-700 border-t-4 border-t-gray-400'
       : `${style.border} border-t-4 border-r border-b border-l border-gray-100 dark:border-slate-600`;
 
@@ -120,7 +159,7 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick }: TreeV
                 </h3>
                 <div className="flex items-center gap-1 mt-0.5">
                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white ${style.bg} shadow-sm bg-opacity-90`}>
-                    {rank.toUpperCase()}
+                    {isHeatmapMode ? `${heat}% HEAT` : rank.toUpperCase()}
                   </span>
                   {!isOnline && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200 uppercase">

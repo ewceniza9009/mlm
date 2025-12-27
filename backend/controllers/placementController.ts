@@ -41,7 +41,7 @@ export const placeUserManually = async (req: Request, res: Response) => {
 
             // Resolve Target Parent (by ID or Username) or Auto-Spillover
             let parent;
-            let finalPosition = position; // Might be adjusted if we use spillover logic
+            let finalPosition = position; // Position may adjust based on spillover rules
 
             if (cleanParentId) {
                 // Direct Parent Selection
@@ -98,9 +98,8 @@ export const placeUserManually = async (req: Request, res: Response) => {
                 commissionBase = pkg.price;
             } else {
                 // No Package? Must be Shop First. Find the activation order.
-                // We assume the first paid order is the activation order.
-                // I'll assume I can use dynamic import or require if top-level import is hard, BUT I should add top level import.
-                // Using require for minimal diff safety right now, ideally add "import Order" at top.
+                // First paid order triggers activation.
+                // Lazy load Order model to avoid circular dependencies.
                 const Order = require('../models/Order').default;
                 const activationOrder = await Order.findOne({ userId: userToPlace._id, status: 'PAID' }).sort({ createdAt: 1 }).session(session || null);
                 if (activationOrder) {

@@ -177,9 +177,7 @@ export const getRecruitGrowth = async (req: Request, res: Response) => {
         // Format for chart (Week 1, Week 2 etc is tricky if empty, lets just return the raw buckets for now or simplify)
         // Simplified: Just returning last 4 weeks fixed buckets is cleaner for UI
 
-        // Let's do daily for growth too? Or just "Last 4 Weeks" buckets.
-        // Let's map the results to "Week 1", "Week 2" etc relative to now?
-        // Actually, simpler: Group by ISO Week.
+        // Grouping by ISO Week for growth charts.
 
         // To ensure we have 4 bars, let's manually build buckets
         const weeks = [];
@@ -192,9 +190,8 @@ export const getRecruitGrowth = async (req: Request, res: Response) => {
             end.setDate(end.getDate() - (i * 7));
             end.setHours(23, 59, 59, 999);
 
-            // Count recruits in this range from DB results? 
-            // Easier to just query DB for this? Or processing in memory is fine for small scale.
-            // Let's use memory filter on a simple fetch for now - safer/easier logic
+            // Count recruits in this range from DB results
+            // In-memory filtering used for simplicity on smaller datasets
         }
 
         // Simpler Approach: Just fetch all recruits from last 28 days and bucket in JS

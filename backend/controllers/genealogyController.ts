@@ -66,7 +66,7 @@ const calculateHeat = async (node: IUser): Promise<number> => {
 
   // 3. Recruitment Activity (Growth) - Max 30 pts
   // Check for recent recruits in the last 30 days
-  // Note: This requires a DB lookup, so we make this function async
+  // Helper requires async DB lookup
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -395,16 +395,10 @@ const calculateRankProgress = (currentRank: string, totalEarned: number, recruit
   const nextReq = rules[nextRank] || { earnings: 999999, recruits: 999 };
 
   // Calculate Progress Logic
-  // We can treat progress as an average of requirements or the lowest bottleneck.
-  // "Road to Legend" usually shows the *lowest* filled bucket (the bottleneck).
-
+  // Progress bar logic uses minimum completion percentage (the bottleneck).
   const earningsPct = Math.min(100, (totalEarned / nextReq.earnings) * 100);
   const recruitsPct = Math.min(100, (recruits / nextReq.recruits) * 100);
 
-  // Overall percent is the average or minimum? Minimum is stricter/better for "what's missing".
-  // But for a visual bar, average feels more rewarding. 
-  // Let's us Minimum for "Completion" logic, but Average for "Progress Bar"? 
-  // Actually, visual bars for composite goals usually show the *lowest* % to indicate how far away the *next* milestone is.
   const overallPercent = Math.min(earningsPct, recruitsPct);
 
   return {

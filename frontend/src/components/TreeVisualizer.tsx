@@ -11,7 +11,8 @@ interface TreeVisualizerProps {
 }
 
 const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick, isHeatmapMode = false }: TreeVisualizerProps) => {
-  // Config removed fetch logic
+  // Config: Logic removed
+
 
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
 
@@ -19,7 +20,7 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick, isHeatm
     width: '100%',
     height: '100%',
     background: 'transparent',
-    touchAction: 'none' // Enable custom touch handling (D3 zoom/pan)
+    touchAction: 'none' // Enable custom touch handling for D3 zoom/pan
   };
 
   const renderForeignObjectNode = ({ nodeDatum, toggleNode }: { nodeDatum: any, toggleNode: () => void }) => {
@@ -66,7 +67,7 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick, isHeatm
 
     // Heatmap Styles Configuration
     const getHeatStyles = (h: number) => {
-      // Inactive is always Cold/Blue-Grey unless we want to show "Ghost" nodes
+      // Inactive nodes displayed as Cold/Blue-Grey
       if (!isOnline) return {
         bg: 'bg-slate-200 dark:bg-slate-800',
         shadow: 'shadow-none',
@@ -102,8 +103,8 @@ const TreeVisualizer = ({ data: treeData, isLoading, error, onNodeClick, isHeatm
     const style = isHeatmapMode ? getHeatStyles(heat) : getRankStyles(rank);
 
     // Inactive Visual Override
-    // logic: If HeatmapMode, we rely on getHeatStyles for the color (active=hot, inactive=cold).
-    // If NOT HeatmapMode (Rank Mode), we explicitly grey out inactive users.
+    // Heatmap mode uses `getHeatStyles` for coloration.
+    // Rank Mode explicitly greys out inactive users.
     const cardBg = (!isOnline && !isHeatmapMode)
       ? 'bg-gray-100 dark:bg-slate-900 opacity-75 grayscale'
       : (isHeatmapMode && !isOnline ? 'bg-slate-100 dark:bg-slate-900 grayscale opacity-60' : 'bg-white dark:bg-slate-800');

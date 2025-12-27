@@ -16,9 +16,9 @@ export const uploadKYC = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        // Multer stores file in req.file. 
-        // We assume storage engine saves it to 'uploads/' and we store the path.
-        // In a real app, use S3/Cloudinary. Here local.
+        // Multer stores file in req.file.
+        // Storage assumed to be local 'uploads/' for this implementation.
+        // Production environments should utilize S3 or Cloudinary.
         // Store relative path for serving
         const filePath = `uploads/kyc/${req.file.filename}`;
 
@@ -154,7 +154,7 @@ export const verify2FA = async (req: AuthRequest, res: Response) => {
 export const disable2FA = async (req: AuthRequest, res: Response) => {
     try {
         const { password, token } = req.body; // Require password + token to disable for security
-        // For simplicity, just token or password. Let's use just token if they are logged in.
+        // Token validation used for authenticated sessions.
 
         const userId = req.user._id;
         const user = await User.findById(userId);
@@ -187,16 +187,16 @@ export const validate2FA = async (req: AuthRequest, res: Response) => {
     try {
         const { token, userId } = req.body; // If passing userId explicitly (admin?) or req.user
 
-        // If used during login, req.user might not be set yet if strictly following JWT flow.
-        // Usually login happens in 2 steps: 1. User/Pass -> Returns "2FA Required" + Temp Token. 2. Send Temp Token + 2FA Code -> Real JWT.
-        // For now, let's assume this is for POST-LOGIN actions (like Withdrawals).
+        // If used during login, req.user availability depends on JWT flow.
+        // Standard login flow: 1. User/Pass -> 2FA Required + Temp Token. 2. Temp Token + Code -> JWT.
+        // Current usage: Post-login actions (e.g., Withdrawals).
 
         const currentUserId = (req as any).user._id;
         const user = await User.findById(currentUserId);
 
         if (!user || !user.twoFactorSecret?.enabled) {
-            return res.json({ valid: true }); // If 2FA not enabled, it's valid? Or denial? Policy dependent. 
-            // For withdrawals, maybe we ENFORCE 2FA. 
+            return res.json({ valid: true }); // 2FA not enabled, proceed.
+            // Future: Enforce 2FA for specific actions (e.g. Withdrawals). 
         }
 
         const verified = speakeasy.totp.verify({

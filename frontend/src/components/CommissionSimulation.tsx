@@ -138,7 +138,8 @@ const CommissionSimulation = () => {
 
 
     const getStoryState = (stepIndex: number) => {
-        // Reconstruct basic state for story mode
+        // Construct story mode state
+
         let s = { nodes: [{ id: 'root', name: 'YOU', active: false, level: 0, personalPV: 0, totalLeftVol: 0, totalRightVol: 0, rank: 'Member', earnings: 0, children: [] }] as any[], left: 0, right: 0, earn: 0, q: false };
 
         // 1. You Activate
@@ -153,7 +154,7 @@ const CommissionSimulation = () => {
         // 4. Cycle 1
         if (stepIndex >= 4) { s.earn += 5; s.nodes[0].totalLeftVol -= 50; s.nodes[0].totalRightVol -= 50; }
 
-        // 5. Flush & Carryover (Implicit in variable state, mostly informational)
+        // 5. Flush & Carryover (Implicit state update, informational step)
         if (stepIndex >= 5) { /* Visual update only */ }
 
         // 6. Spillover (Charlie)
@@ -177,8 +178,7 @@ const CommissionSimulation = () => {
         if (stepIndex >= 9) {
             const alice = s.nodes[0].children.find((c: any) => c.id === 'alice');
             if (alice && alice.children) {
-                // Charlie is already there (index 0). Add under Charlie or Alice's other leg?
-                // Let's just dump volume for simplicity visually
+                // Add volume to first child for visual simplicity
                 alice.children[0].children = [
                     { id: 'd', name: 'Dave', level: 3, position: 'left', active: true, personalPV: 100, totalLeftVol: 0, totalRightVol: 0, rank: 'Member', earnings: 0 },
                     { id: 'e', name: 'Eve', level: 3, position: 'right', active: true, personalPV: 100, totalLeftVol: 0, totalRightVol: 0, rank: 'Member', earnings: 0 }
@@ -287,7 +287,7 @@ const CommissionSimulation = () => {
             // Flow volume UP
             const path = findPathToNode(newNodes[0], target.id);
             if (path) {
-                // Path includes the target node itself, we want to iterate up from its direct parent
+                // Iterate up from direct parent of target
                 for (let i = path.length - 2; i >= 0; i--) { // Start from direct parent of target
                     const currentParent = path[i];
                     const childInPath = path[i + 1]; // The child that is on the path to target
@@ -316,9 +316,8 @@ const CommissionSimulation = () => {
     const runSandboxCycle = () => {
         const newNodes = JSON.parse(JSON.stringify(sandboxNodes));
 
-        // Recursive function to process cycles from bottom-up or top-down
-        // For simplicity, let's process all nodes.
-        // A more robust system would process based on events or a timer.
+        // Recursive function to process cycles
+        // Production systems should use event-driven or scheduled processing
         const processNode = (n: SimulationNode) => {
             // Process children first to ensure their volumes are updated before parent's cycle
             if (n.children) {

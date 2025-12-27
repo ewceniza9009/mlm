@@ -10,7 +10,7 @@ import mongoose from 'mongoose';
 export const withTransaction = async <T>(
     operation: (session: mongoose.ClientSession | undefined) => Promise<T>
 ): Promise<T> => {
-    // If we can't start a session (e.g. mock connection), run directly
+    // Return direct operation if session creation is not possible (e.g., mock connection)
     if (!mongoose.connection || !mongoose.connection.getClient()) {
         return operation(undefined);
     }

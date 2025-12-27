@@ -71,9 +71,8 @@ export const replyTicket = async (req: AuthRequest, res: Response) => {
             date: new Date()
         });
 
-        // If admin replies, maybe set status to resolved? Or keep open. 
-        // If user replies, maybe reopen if closed? 
-        // For now, just update timestamp via save
+        // Update ticket timestamp via save
+        // TODO: Implement status updates based on replier role (e.g. Admin reply -> Resolved?)
 
         await ticket.save();
 
@@ -87,8 +86,8 @@ export const replyTicket = async (req: AuthRequest, res: Response) => {
                 `Admin replied to ticket: ${ticket.subject}`
             );
         } else {
-            // Notify Admins? (Optional - ideally we would have an admin notification system)
-            // For now, let's keep it user-centric as per request.
+            // Notify Admins (Future implementation)
+            // Current notification flow is user-centric.
         }
 
         res.json(ticket);

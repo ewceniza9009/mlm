@@ -21,7 +21,7 @@ const verifyPaths = async () => {
         console.log(`Target Root User: ${admin.username} (${admin._id})`);
         console.log(`Root Path: "${admin.path}"`);
 
-        // Check exact match first
+        // Check exact match
         const directChildren = await User.find({ sponsorId: admin._id });
         console.log(`Direct Children (Sponsor): ${directChildren.length}`);
 
@@ -35,7 +35,7 @@ const verifyPaths = async () => {
         const loosePathChildren = await User.find({ path: { $regex: `${admin._id}` } });
         console.log(`Downline via Loose Regex (ID): ${loosePathChildren.length}`);
 
-        // Inspect some random users
+        // Inspect sample users
         const sampleUsers = await User.find({}).limit(5);
         console.log('\n--- Sample Users Path Data ---');
         sampleUsers.forEach(u => {

@@ -97,9 +97,8 @@ const generateAutomatedTasks = async (userId: string) => {
             userId,
             type: 'REORDER_REMINDER',
             relatedUserId: order.userId,
-            status: { $in: ['PENDING', 'COMPLETED', 'DISMISSED'] }, // Don't spam them every day if they dismissed it? verify logic.
-            // Actually, if they dismissed it "for this month", we shouldn't show it again.
-            // Let's check if we created one in the last 15 days.
+            status: { $in: ['PENDING', 'COMPLETED', 'DISMISSED'] },
+            // Dismissal Logic: Do not reshow if dismissed within 15 days.
             createdAt: { $gte: startWindow }
         });
 

@@ -30,7 +30,7 @@ const AdminOrdersPage = () => {
         showConfirm({
             title: 'Approve and Activate?',
             message: 'This will mark the order as PAID, activate the user immediately, and distribute all commissions. This action cannot be undone.',
-            type: 'info', // Changed to info/success style logic. Usually success but showConfirm supports danger/info. Let's use info or if confirm supports success, use that. Looking at type defs: type?: 'danger' | 'info'. OK.
+            type: 'info', // Using 'info' type for confirmation dialog as 'success' is not a supported type.
             confirmText: 'Yes, Activate User',
             onConfirm: async () => {
                 try {

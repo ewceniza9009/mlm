@@ -33,7 +33,7 @@ export const activateUser = async (userId: string, amountPaid: number, session: 
         let savedUser: any = user;
         let isHoldingTank = false;
 
-        // 2. Resolve Holding Tank Logic (Copied from AuthController)
+        // 2. Resolve Holding Tank Logic
         if (sponsor) {
             // @ts-ignore
             const sponsorSetting = (sponsor as any).enableHoldingTank || 'system';
@@ -60,11 +60,9 @@ export const activateUser = async (userId: string, amountPaid: number, session: 
             if (shopFirstHoldingTank) {
                 console.log(`[ActivateUser] Shop First Holding Tank Enabled. Placing ${user.username} in Holding Tank.`);
                 user.isPlaced = false;
-                // user.status is already active
-                // sponsorId is already set
+                // user.status and sponsorId are already set
                 savedUser = await user.save({ session });
-                // Note: Bonuses are delayed until actual placement (see placeUserManually).
-                // So if we park in Holding Tank, we skip bonuses here.
+                // Bonuses are deferred until manual placement (see placeUserManually).
             } else {
                 // force auto place logic
                 console.log('[ActivateUser] Auto-placing in Network...');
@@ -78,8 +76,7 @@ export const activateUser = async (userId: string, amountPaid: number, session: 
                 if (amountPaid) {
                     // SHOP FIRST ACTIVATION
                     // Triggered by Order Payment.
-                    // We use the Order Amount for the Referral Bonus.
-                    // We set PV to 0 here because the Order Controller handles the Product PV separately.
+                    // Uses Order Amount as base; PV set to 0 as it's handled by Order Controller.
                     console.log(`[ActivateUser] Shop First: Using Order Amount $${amountPaid} as base. Ignoring Package PV to prevent double-counting.`);
                     baseAmount = amountPaid;
                     pvAmount = 0;
@@ -102,11 +99,9 @@ export const activateUser = async (userId: string, amountPaid: number, session: 
 
                 if (amountPaid > 0) {
                     // 4a. Distribute Commission (Referral Bonus)
-                    // Logic: Is there a sponsor?
                     if (user.sponsorId) {
-                        // Determine Enrollment Package Price vs. Shop Order
-                        // For simplicity here, we treat the entire order amount as commissionable for Referral Bonus
-                        // In a real app, you might have separate BV/CV.
+                        // Treating full order amount as commissionable basis for Referral Bonus.
+                        // Production systems may require separate BV/CV values.
                         console.log(`Distributing Referral Bonus on $${amountPaid}`);
                         await CommissionEngine.distributeReferralBonus(user.sponsorId.toString(), user._id.toString(), amountPaid, session);
                     }

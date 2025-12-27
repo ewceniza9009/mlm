@@ -27,9 +27,8 @@ const findPlacement = async (sponsorId: string | Types.ObjectId, preference: str
     return traverseExtreme(sponsor.rightChildId, 'right', session);
   }
 
-  // Multi-Center (Placeholder - demo usually sticks to basic, but we can default to balanced or specific logic)
   // Multi-Center / Alternate (1 Left, 1 Right)
-  // This logic attempts to keep the tree density balanced by filling the side with fewer members.
+  // Balances tree density by filling the side with fewer members.
   if (preference === 'balanced' || preference === 'alternate') {
     if (!sponsor.leftChildId) return { parentId: sponsor._id as Types.ObjectId, position: 'left' };
     if (!sponsor.rightChildId) return { parentId: sponsor._id as Types.ObjectId, position: 'right' };
@@ -37,7 +36,7 @@ const findPlacement = async (sponsorId: string | Types.ObjectId, preference: str
     // Get subtree counts synchronously (or approximation via PV)
     // For true 1:1 balance, we need descendant count.
 
-    // Check Left Subtree Count (Expensive regex count for accuracy)
+    // Check Left Subtree Count (Regex count)
     const leftCount = await User.countDocuments({ path: { $regex: `,${sponsor.leftChildId.toString()},` } }).session(session || null);
 
     // Check Right Subtree Count
@@ -74,7 +73,7 @@ const findPlacement = async (sponsorId: string | Types.ObjectId, preference: str
     if (!sponsor.rightChildId) return { parentId: sponsor._id as Types.ObjectId, position: 'right' };
 
     // We need to count members in each leg to decide
-    // Note: This regex count is expensive for huge trees, but essential for balancing.
+    // Regex count used for accurate structural balancing.
     const leftCount = await User.countDocuments({ path: { $regex: `,${sponsor.leftChildId.toString()},` } }).session(session || null);
     const rightCount = await User.countDocuments({ path: { $regex: `,${sponsor.rightChildId.toString()},` } }).session(session || null);
 
@@ -116,7 +115,7 @@ const traverseToFirstEmpty = async (startNodeId: Types.ObjectId, session: mongoo
     queue.push(node.leftChildId);
     queue.push(node.rightChildId);
   }
-  throw new Error('Tree full?'); // Unlikely in infinite tree
+  throw new Error('Tree full');
 };
 
 const placeUser = async (newUser: IUser, sponsorId: string, preferenceOverride?: string, session?: mongoose.ClientSession): Promise<IUser> => {

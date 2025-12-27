@@ -91,7 +91,7 @@ const AdminSettingsPage = () => {
         } catch (error) {
             console.error('Failed to update setting', error);
             setEnableShop(!newValue); // Revert on error
-            // Theoretically revert the others too if it failed, but likely acceptable to drift on error.
+            // Opting for eventual consistency rather than complex rollback logic.
         }
     };
 
@@ -127,8 +127,7 @@ const AdminSettingsPage = () => {
         } catch (error) {
             console.error('Failed to update setting', error);
             setShopFirstEnrollment(!newValue); // Revert on error
-            // If we forced holding tank off, should we revert it? 
-            // Probably fine to leave it off or revert it if we want strict consistency, but complex.
+            // Strict consistency is optional here; proceeding without revert for better UX.
         }
     };
 

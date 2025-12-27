@@ -125,7 +125,7 @@ export const api = createApi({
         method: 'PUT',
         body: data,
       }),
-      // Invalidate nothing or maybe refetch config if needed, but result returns new config
+      // No invalidation needed; API returns updated config
     }),
 
     // Package Management
@@ -473,7 +473,7 @@ export const api = createApi({
         const qs = new URLSearchParams(params).toString();
         return `admin/product-ideas?${qs}`;
       },
-      providesTags: ['Packages'], // Using Packages tag temporarily or distinct 'Ideas'
+      providesTags: ['Packages'], // Using shared 'Packages' tag; consider dedicated 'Ideas' tag in future refactor
     }),
     createProductIdea: builder.mutation({
       query: (body) => ({

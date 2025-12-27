@@ -64,7 +64,7 @@ export const register = async (req: Request, res: Response) => {
     let savedUser: any;
 
     if (shopFirstEnrollment) {
-      // NEW FLOW: Shop First
+      // Flow: Shop First Enrollment
       console.log('[Register] Shop First Enrollment: ENABLED');
       newUser.status = 'pending_payment';
       newUser.isActive = true; // Can login
@@ -77,10 +77,10 @@ export const register = async (req: Request, res: Response) => {
 
       savedUser = await newUser.save();
     } else {
-      // LEGACY FLOW: Immediate Placement
+      // Flow: Legacy/Standard Enrollment
       console.log('[Register] Shop First Enrollment: DISABLED (Using Legacy Flow)');
 
-      // Check Hybrid Holding Tank Logic
+      // Evaluate Holding Tank Logic
       let isHoldingTank = false;
 
       if (sponsor) {

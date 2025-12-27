@@ -2,8 +2,7 @@ import { Request, Response } from 'express';
 import SystemSetting from '../models/SystemSetting';
 import { AuthRequest } from '../middleware/authMiddleware';
 
-// Get all settings (Admin might need all, but some might be public)
-// For now, let's allow authenticated users to get settings (or at least safe ones)
+// Retrieve all settings (Authenticated access required for general settings)
 export const getSettings = async (req: Request, res: Response) => {
     try {
         const settings = await SystemSetting.find({});

@@ -67,7 +67,7 @@ const FomoAlerts = () => {
                             )}
                         </div>
 
-                        {/* Close (Optional, maybe dismiss) */}
+                        {/* Close / Dismiss Action */}
                         <button className="text-black/20 hover:text-black/40 dark:text-white/20 dark:hover:text-white/40 transition-colors">
                             <XCircle size={20} />
                         </button>

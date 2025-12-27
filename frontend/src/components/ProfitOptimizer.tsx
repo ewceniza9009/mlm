@@ -5,8 +5,8 @@ import { ArrowRight, Zap, Target, Scale } from 'lucide-react';
 interface ProfitOptimizerProps {
     leftPV: number;
     rightPV: number;
-    pairUnit?: number; // Default 100
-    commissionPerPair?: number; // Default 10
+    pairUnit?: number; // Default: 100
+    commissionPerPair?: number; // Default: 10
 }
 
 const ProfitOptimizer: React.FC<ProfitOptimizerProps> = ({
@@ -25,21 +25,18 @@ const ProfitOptimizer: React.FC<ProfitOptimizerProps> = ({
 
     const targetLeg = isLeftStrong ? 'Right' : (rightPV > leftPV ? 'Left' : 'Both');
 
-    // Calculate Gap to next cycle
-    // How many pairs currently?
-    // We assume 1:1 ratio for simplicity in this widget
+    // Calculate gap to next cycle
+    // Assumes 1:1 ratio for simplified widget calculation
     const currentPairs = Math.floor(weakLegPV / pairUnit);
 
-    // Potential Pairs if we catch up to Strong Leg
+    // Potential pairs if Weak Leg matches Strong Leg
     const maxPotentialPairs = Math.floor(strongLegPV / pairUnit);
     const potentialEarnings = (maxPotentialPairs - currentPairs) * commissionPerPair;
 
-    // Immediate Next Goal: Just 1 more pair? Or Fill the gap?
-    // "Profit Max" usually means "Fill the Weak Leg to match the Strong Leg" to cash out held volume.
+    // Determine volume needed to maximize current potential
+    // Target is to match the Strong Leg volume primarily by units
 
     const volumeNeededToMax = (maxPotentialPairs * pairUnit) - weakLegPV;
-    // Actually, we want to match the Strong PV exactly? Or just the units?
-    // Usually units.
 
     if (isBalanced && leftPV === 0) {
         return (
